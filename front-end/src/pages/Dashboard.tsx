@@ -2,6 +2,7 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { TopBar } from "@/components/top-bar";
 
 export default function DashboardPage() {
   return (
@@ -29,16 +30,7 @@ export default function DashboardPage() {
       {/* Main */}
       <main className="flex-1 p-6">
         {/* Top Bar */}
-        <div className="flex items-center justify-between mb-6">
-          <h1 className="text-2xl font-bold">Overview</h1>
-
-          <div className="flex items-center gap-3">
-            <Avatar>
-              <AvatarFallback>U</AvatarFallback>
-            </Avatar>
-            <span className="font-medium">User</span>
-          </div>
-        </div>
+        <TopBar></TopBar>
 
         <Separator className="mb-6" />
 
@@ -87,8 +79,6 @@ export default function DashboardPage() {
 
           <div className="flex gap-4">
             <Button>Add Property</Button>
-            <Button variant="secondary">Invite Tenant</Button>
-            <Button variant="outline">Generate Report</Button>
           </div>
         </div>
       </main>

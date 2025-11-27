@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Database.Models;
+using Microsoft.AspNetCore.Authorization;
 
 namespace Database.Controllers
 {
@@ -22,6 +23,7 @@ namespace Database.Controllers
         }
 
         // GET: api/Property
+        [Authorize]
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Property>>> GetProperties()
         {
@@ -29,6 +31,7 @@ namespace Database.Controllers
         }
 
         // GET: api/Property/5
+        [Authorize]
         [HttpGet("{id}")]
         public async Task<ActionResult<Property>> GetProperty(Guid id)
         {
@@ -44,6 +47,7 @@ namespace Database.Controllers
 
         // PUT: api/Property/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
+        [Authorize]
         [HttpPut("{id}")]
         public async Task<IActionResult> PutProperty(Guid id, Property @property)
         {
@@ -75,6 +79,7 @@ namespace Database.Controllers
 
         // POST: api/Property
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
+        [Authorize]
         [HttpPost]
         public async Task<ActionResult<Property>> PostProperty(Property @property)
         {
@@ -85,6 +90,7 @@ namespace Database.Controllers
         }
 
         // DELETE: api/Property/5
+        [Authorize]
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteProperty(Guid id)
         {

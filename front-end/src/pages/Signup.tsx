@@ -1,9 +1,12 @@
-import { useState } from "react";
+import { useContext, useState } from "react";
 import api from "@/api/client";
 import { SignupForm } from "@/components/signup-form";
 import { Card, CardContent } from "@/components/ui/card";
+import { AuthContext } from "@/context/AuthContext";
+import { useNavigate } from "react-router-dom";
 
 export default function SignupPage() {
+  const { login } = useContext(AuthContext)!;
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [role, setRole] = useState("");
@@ -22,11 +25,17 @@ export default function SignupPage() {
         role,
       });
 
+      const navigate = useNavigate()
       const userId = authRes.data.userId;
+      const token = authRes.data.token;
+
+      // set token for authorization since tenant and landlord require it
+      localStorage.setItem("token", token);
+      api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
 
       if (role === "Tenant") {
         await api.post("/tenant", {
-          id: userId,
+          id:  authRes.data.userId,
           firstName,
           lastName,
         });
@@ -43,8 +52,12 @@ export default function SignupPage() {
         });
       }
 
-      alert("Account created");
-      window.location.href = "/login";
+      //put user details and token in local storage
+      login(
+      { userId: authRes.data.userId, email: authRes.data.email },
+      authRes.data.token);
+
+      navigate("/", { replace: true });
     } catch (err) {
       alert("Signup failed.");
     }

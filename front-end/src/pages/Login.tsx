@@ -3,12 +3,14 @@ import api from "@/api/client";
 import { AuthContext } from "@/context/AuthContext";
 import { AuthForm } from "@/components/auth-form";
 import { Card, CardContent } from "@/components/ui/card";
+import { useNavigate } from "react-router-dom";
 
 export default function Login() {
   const { login } = useContext(AuthContext)!;
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+   const navigate = useNavigate();
 
   const submit = async () => {
     try {
@@ -17,7 +19,7 @@ export default function Login() {
         { userId: res.data.userId, email: res.data.email },
         res.data.token
       );
-      window.location.href = "/dashboard";
+      navigate("/", { replace: true });
     } catch {
       alert("Login failed.");
     }

@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Database.Models;
+using Microsoft.AspNetCore.Authorization;
 
 namespace Database.Controllers
 {
@@ -22,6 +23,7 @@ namespace Database.Controllers
         }
 
         // GET: api/RentRecord
+        [Authorize]
         [HttpGet]
         public async Task<ActionResult<IEnumerable<RentRecord>>> GetRentRecords()
         {
@@ -29,6 +31,7 @@ namespace Database.Controllers
         }
 
         // GET: api/RentRecord/5
+        [Authorize]
         [HttpGet("{id}")]
         public async Task<ActionResult<RentRecord>> GetRentRecord(Guid id)
         {
@@ -44,6 +47,7 @@ namespace Database.Controllers
 
         // PUT: api/RentRecord/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
+        [Authorize]
         [HttpPut("{id}")]
         public async Task<IActionResult> PutRentRecord(Guid id, RentRecord rentRecord)
         {
@@ -75,6 +79,7 @@ namespace Database.Controllers
 
         // POST: api/RentRecord
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
+        [Authorize]
         [HttpPost]
         public async Task<ActionResult<RentRecord>> PostRentRecord(RentRecord rentRecord)
         {
@@ -85,6 +90,7 @@ namespace Database.Controllers
         }
 
         // DELETE: api/RentRecord/5
+        [Authorize]
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteRentRecord(Guid id)
         {

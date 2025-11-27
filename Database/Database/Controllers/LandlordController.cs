@@ -2,6 +2,7 @@ using Database.DTOs.Landlord;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Database.Models;
+using Microsoft.AspNetCore.Authorization;
 
 namespace Database.Controllers
 {
@@ -17,6 +18,7 @@ namespace Database.Controllers
         }
 
         // GET: api/Landlord
+        [Authorize]
         [HttpGet]
         public async Task<ActionResult<IEnumerable<LandlordDto>>> GetLandlords()
         {
@@ -33,6 +35,7 @@ namespace Database.Controllers
         }
 
         // GET: api/Landlord/5
+        [Authorize]
         [HttpGet("{id}")]
         public async Task<ActionResult<LandlordDto>> GetLandlord(Guid id)
         {
@@ -50,6 +53,7 @@ namespace Database.Controllers
         }
 
         // POST: api/Landlord
+        [Authorize]
         [HttpPost]
         public async Task<ActionResult<LandlordDto>> CreateLandlord(CreateLandlordDto dto)
         {
@@ -75,6 +79,7 @@ namespace Database.Controllers
         }
 
         // PUT: api/Landlord/5
+        [Authorize]
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateLandlord(Guid id, UpdateLandlordDto dto)
         {
@@ -93,6 +98,7 @@ namespace Database.Controllers
         }
 
         // DELETE: api/Landlord/5
+        [Authorize]
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteLandlord(Guid id)
         {
