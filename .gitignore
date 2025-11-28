@@ -150,3 +150,8 @@ docker-data/
 *.orig
 *.tmp.json
 *.generated.cs
+
+
+localhost.pem
+localhost-key.pem
+*.pem
