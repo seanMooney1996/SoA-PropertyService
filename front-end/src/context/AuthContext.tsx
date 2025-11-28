@@ -3,6 +3,7 @@ import { createContext, useState, useEffect, ReactNode } from "react";
 export interface User {
   userId: string;
   email: string;
+  fname: string;
 }
 
 interface AuthContextType {
@@ -22,6 +23,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const login = (user: User, token: string) => {
+    console.log("login with user -"+ JSON.stringify(user))
     localStorage.setItem("user", JSON.stringify(user));
     localStorage.setItem("token", token);
     setUser(user);

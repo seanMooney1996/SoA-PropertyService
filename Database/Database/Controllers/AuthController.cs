@@ -49,7 +49,7 @@ namespace Database.Controllers
             {
                 var landlord = new Landlord
                 {
-                    Id = Guid.NewGuid(),
+                    Id = auth.Id,
                     FirstName = dto.FirstName,
                     LastName = dto.LastName,
                     Email = dto.Email,
@@ -65,7 +65,7 @@ namespace Database.Controllers
             {
                 var tenant = new Tenant
                 {
-                    Id = Guid.NewGuid(),
+                    Id = auth.Id,
                     FirstName = dto.FirstName,
                     LastName = dto.LastName
                 };
@@ -98,15 +98,32 @@ namespace Database.Controllers
 
             if (user == null)
                 return Unauthorized("Invalid email or password.");
-
+            
             if (!PasswordHasher.VerifyPassword(dto.Password, user.PasswordHash))
                 return Unauthorized("Invalid email or password.");
 
+            string fName = "";
+
+            if (user.Role.Equals("landlord", StringComparison.OrdinalIgnoreCase))
+            {
+                var landlord = await _context.Landlords
+                    .FirstOrDefaultAsync(x => x.Id == user.Id);
+                Console.WriteLine("Landlord "+landlord.FirstName);
+                fName = landlord?.FirstName ?? "";
+            }
+            else
+            {
+                var tenant = await _context.Tenants
+                    .FirstOrDefaultAsync(x => x.Id == user.Id);
+                Console.WriteLine("Tenant ",tenant.FirstName);
+                fName = tenant?.FirstName ?? "";
+            }
             var response = new AuthResponseDto
             {
                 UserId = user.Id,
                 Email = user.Email,
-                Token = _jwtService.GenerateToken(user.Id,user.Email)
+                Token = _jwtService.GenerateToken(user.Id,user.Email),
+                FirstName = fName
             };
 
             return Ok(response);

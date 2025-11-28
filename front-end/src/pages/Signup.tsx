@@ -16,6 +16,7 @@ export default function SignupPage() {
 
   const [phone, setPhone] = useState("");
   const [companyName, setCompanyName] = useState("");
+  const navigate = useNavigate()
 
   const submit = async () => {
     try {
@@ -23,38 +24,22 @@ export default function SignupPage() {
         email,
         password,
         role,
+        firstName,
+        lastName,
+        phone,
+        companyName,
       });
 
-      const navigate = useNavigate()
       const userId = authRes.data.userId;
       const token = authRes.data.token;
 
-      // set token for authorization since tenant and landlord require it
+      // set token for authorization 
       localStorage.setItem("token", token);
-      api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
-
-      if (role === "Tenant") {
-        await api.post("/tenant", {
-          id:  authRes.data.userId,
-          firstName,
-          lastName,
-        });
-      }
-
-      if (role === "Landlord") {
-        await api.post("/landlord", {
-          id: userId,
-          firstName,
-          lastName,
-          email,
-          phone,
-          companyName,
-        });
-      }
+      api.defaults.headers.common["Authorization"] = `Bearer ${token}`
 
       //put user details and token in local storage
       login(
-      { userId: authRes.data.userId, email: authRes.data.email },
+      { userId: authRes.data.userId, email: authRes.data.email, fname:firstName },
       authRes.data.token);
 
       navigate("/", { replace: true });

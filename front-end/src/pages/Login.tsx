@@ -10,13 +10,14 @@ export default function Login() {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-   const navigate = useNavigate();
+  const navigate = useNavigate();
 
   const submit = async () => {
     try {
       const res = await api.post("/auth/login", { email, password });
+      console.log(JSON.stringify(res.data))
       login(
-        { userId: res.data.userId, email: res.data.email },
+        { userId: res.data.userId, email: res.data.email, fname: res.data.firstName },
         res.data.token
       );
       navigate("/", { replace: true });
