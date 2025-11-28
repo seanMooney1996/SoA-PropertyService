@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Claims;
 using System.Threading.Tasks;
+using Database.DTOs.Property;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -19,7 +21,6 @@ namespace Database.Controllers
         public PropertyController(PropertyServiceContext context)
         {
             _context = context;
-            context.Database.EnsureCreated();
         }
 
         // GET: api/Property
@@ -81,12 +82,34 @@ namespace Database.Controllers
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [Authorize]
         [HttpPost]
-        public async Task<ActionResult<Property>> PostProperty(Property @property)
+        public async Task<ActionResult<Property>> PostProperty(CreatePropertyDto propertyDto)
         {
-            _context.Properties.Add(@property);
+            
+            Console.WriteLine("RAW AUTH HEADER: " + Request.Headers.Authorization);
+            Console.WriteLine("CLAIMS IN USER:");
+            foreach (var c in User.Claims)
+            {
+                Console.WriteLine($"{c.Type} = {c.Value}");
+            }
+            var property = new Property()
+            {
+                Id =  Guid.NewGuid(),
+                LandlordId = Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value),
+                AddressLine1 = propertyDto.AddressLine1,
+                City = propertyDto.City,
+                County = propertyDto.County,
+                Bedrooms = propertyDto.Bedrooms,
+                Bathrooms = propertyDto.Bathrooms,
+                RentPrice = propertyDto.RentPrice,
+                IsAvailable = true,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow
+            };
+
+            _context.Properties.Add(property);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction("GetProperty", new { id = @property.Id }, @property);
+            return CreatedAtAction("GetProperty", new { id = property.Id }, property);
         }
 
         // DELETE: api/Property/5

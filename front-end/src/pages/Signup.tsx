@@ -7,20 +7,19 @@ import { useNavigate } from "react-router-dom";
 
 export default function SignupPage() {
   const { login } = useContext(AuthContext)!;
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [role, setRole] = useState("");
-
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
-
   const [phone, setPhone] = useState("");
   const [companyName, setCompanyName] = useState("");
-  const navigate = useNavigate()
+  const navigate = useNavigate();
 
   const submit = async () => {
     try {
-      const authRes = await api.post("/Auth/signup", {
+      const res = await api.post("/auth/signup", {
         email,
         password,
         role,
@@ -30,20 +29,12 @@ export default function SignupPage() {
         companyName,
       });
 
-      const userId = authRes.data.userId;
-      const token = authRes.data.token;
-
-      // set token for authorization 
-      localStorage.setItem("token", token);
-      api.defaults.headers.common["Authorization"] = `Bearer ${token}`
-
-      //put user details and token in local storage
       login(
-      { userId: authRes.data.userId, email: authRes.data.email, fname:firstName },
-      authRes.data.token);
+        { userId: res.data.userId, email: res.data.email, fname: firstName }
+      );
 
       navigate("/", { replace: true });
-    } catch (err) {
+    } catch {
       alert("Signup failed.");
     }
   };

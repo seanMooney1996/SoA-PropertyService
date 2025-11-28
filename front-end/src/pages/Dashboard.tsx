@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { TopBar } from "@/components/top-bar";
+import { DashboardMain } from "@/components/dashboard-main";
 
 export default function DashboardPage() {
   return (
@@ -73,14 +74,7 @@ export default function DashboardPage() {
           </Card>
         </div>
 
-        {/* Actions Section */}
-        <div className="mt-8">
-          <h2 className="text-xl font-semibold mb-3">Quick Actions</h2>
-
-          <div className="flex gap-4">
-            <Button>Add Property</Button>
-          </div>
-        </div>
+        <DashboardMain></DashboardMain>
       </main>
     </div>
   );

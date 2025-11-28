@@ -15,7 +15,6 @@ namespace Database.Controllers
     public class AuthController : ControllerBase
     {
         private readonly PropertyServiceContext _context;
-        
         private readonly JwtService _jwtService;
 
         public AuthController(PropertyServiceContext context, JwtService jwtService)
@@ -33,18 +32,18 @@ namespace Database.Controllers
 
             if (existing != null)
                 return Conflict("Email already in use.");
-            
+
             var auth = new Authentication
             {
                 Id = Guid.NewGuid(),
                 Email = dto.Email,
                 PasswordHash = PasswordHasher.HashPassword(dto.Password),
-                Role = dto.Role.ToLower(), 
+                Role = dto.Role.ToLower(),
                 CreatedAt = DateTime.UtcNow
             };
 
             _context.Authentications.Add(auth);
-            
+
             if (dto.Role.ToLower() == "landlord")
             {
                 var landlord = new Landlord
@@ -78,12 +77,27 @@ namespace Database.Controllers
             }
 
             await _context.SaveChangesAsync();
-            
+
+            var token = _jwtService.GenerateToken(auth.Id, auth.Email);
+
+            Response.Cookies.Append(
+                "authToken",
+                token,
+                new CookieOptions
+                {
+                    Path = "/",               
+                    HttpOnly = true,
+                    Secure = true,
+                    SameSite = SameSiteMode.None,
+                    Expires = DateTime.UtcNow.AddHours(1)
+                }
+            );
+
             var response = new AuthResponseDto
             {
                 UserId = auth.Id,
                 Email = auth.Email,
-                Token = _jwtService.GenerateToken(auth.Id, auth.Email)
+                FirstName = dto.FirstName
             };
 
             return Ok(response);
@@ -98,7 +112,7 @@ namespace Database.Controllers
 
             if (user == null)
                 return Unauthorized("Invalid email or password.");
-            
+
             if (!PasswordHasher.VerifyPassword(dto.Password, user.PasswordHash))
                 return Unauthorized("Invalid email or password.");
 
@@ -108,25 +122,58 @@ namespace Database.Controllers
             {
                 var landlord = await _context.Landlords
                     .FirstOrDefaultAsync(x => x.Id == user.Id);
-                Console.WriteLine("Landlord "+landlord.FirstName);
                 fName = landlord?.FirstName ?? "";
             }
             else
             {
                 var tenant = await _context.Tenants
                     .FirstOrDefaultAsync(x => x.Id == user.Id);
-                Console.WriteLine("Tenant ",tenant.FirstName);
                 fName = tenant?.FirstName ?? "";
             }
+
+            var token = _jwtService.GenerateToken(user.Id, user.Email);
+
+            Response.Cookies.Append(
+                "authToken",
+                token,
+                new CookieOptions
+                {
+                    Path = "/",
+                    HttpOnly = true,
+                    Secure = true,              
+                    SameSite = SameSiteMode.None, 
+                    Expires = DateTime.UtcNow.AddHours(1)
+                }
+            );
+            
             var response = new AuthResponseDto
             {
                 UserId = user.Id,
                 Email = user.Email,
-                Token = _jwtService.GenerateToken(user.Id,user.Email),
                 FirstName = fName
             };
 
             return Ok(response);
+        }
+
+        // POST: api/Auth/logout
+        [HttpPost("logout")]
+        public IActionResult Logout()
+        {
+            Response.Cookies.Append(
+                "authToken",
+                "",
+                new CookieOptions
+                {
+                    Path = "/",
+                    HttpOnly = true,
+                    Secure = true,
+                    SameSite = SameSiteMode.None,
+                    Expires = DateTime.UtcNow.AddDays(-1)
+                }
+            );
+
+            return Ok(new { message = "Logged out" });
         }
     }
 }

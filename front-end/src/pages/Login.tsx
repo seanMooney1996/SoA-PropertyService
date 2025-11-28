@@ -15,11 +15,11 @@ export default function Login() {
   const submit = async () => {
     try {
       const res = await api.post("/auth/login", { email, password });
-      console.log(JSON.stringify(res.data))
+
       login(
-        { userId: res.data.userId, email: res.data.email, fname: res.data.firstName },
-        res.data.token
+        { userId: res.data.userId, email: res.data.email, fname: res.data.firstName }
       );
+
       navigate("/", { replace: true });
     } catch {
       alert("Login failed.");

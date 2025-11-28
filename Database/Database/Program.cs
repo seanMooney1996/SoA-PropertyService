@@ -1,3 +1,4 @@
+using System.IdentityModel.Tokens.Jwt;
 using System.Text;
 using Database.Models;
 using Database.Services;
@@ -7,26 +8,58 @@ using Microsoft.IdentityModel.Tokens;
 
 
 var builder = WebApplication.CreateBuilder(args);
-var jwtSettings = builder.Configuration.GetSection("JwtSettings");
+
+builder.Services.AddControllers().AddJsonOptions(options =>
+{
+    options.JsonSerializerOptions.Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping;
+});
+JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
+JwtSecurityTokenHandler.DefaultOutboundClaimTypeMap.Clear();
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
+        
+        var jwtSettings = builder.Configuration.GetSection("JwtSettings");
+        var key = jwtSettings.GetValue<string>("Key");
+        Console.WriteLine("JWT KEY IN STARTUP: " + key);
+        Console.WriteLine("JWT KEY LENGTH: " + key.Length);
+
+        options.Events = new JwtBearerEvents
+        {
+            OnMessageReceived = ctx =>
+            {
+                Console.WriteLine("JWT MIDDLEWARE RECEIVED TOKEN: " + (ctx.Token ?? "NULL"));
+
+                if (ctx.Request.Cookies.TryGetValue("authToken", out var token))
+                {
+                    Console.WriteLine("COOKIE READ BY MIDDLEWARE: " + token);
+                    ctx.Token = token;
+                }
+
+                return Task.CompletedTask;
+            }
+        };
         options.TokenValidationParameters = new TokenValidationParameters
         {
-            ValidateIssuer = true,
-            ValidateAudience = true,
+            ValidateIssuer = false,
+            ValidateAudience = false,
             ValidateLifetime = true,
             ValidateIssuerSigningKey = true,
-            
-            ValidIssuer = jwtSettings["Issuer"],
-            ValidAudience = jwtSettings["Audience"],
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings["Key"]!))
+            IssuerSigningKey = new SymmetricSecurityKey(
+                Encoding.UTF8.GetBytes(key)
+            ),
+            ClockSkew = TimeSpan.Zero
         };
     });
 
+
+
+builder.Services.AddAuthorization();
+
 var connectionString = builder.Configuration.GetConnectionString("PropertyService") ?? "Data Source=PropertyService.db";
 // Add services to the container.
-builder.Services.AddSingleton<JwtService>();
+builder.Services.AddScoped<JwtService>();
+
 
 builder.Services.AddDbContext<PropertyServiceContext>(options =>
     options.UseSqlite(connectionString));
@@ -40,10 +73,12 @@ builder.Services.AddCors(options =>
     options.AddPolicy("AllowFrontend", policy =>
     {
         policy
-            .AllowAnyHeader()
-            .AllowAnyMethod()
+            .WithOrigins("https://localhost:5173")
             .AllowCredentials()
-            .WithOrigins("http://localhost:5173");
+            .AllowAnyMethod()
+            .AllowAnyHeader()
+            .SetPreflightMaxAge(TimeSpan.FromHours(1))
+            .WithExposedHeaders("Authorization");
     });
 });
 
@@ -56,16 +91,15 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+app.UseCors("AllowFrontend");
+app.UseAuthentication();
+app.UseAuthorization();
+
 if (!app.Environment.IsDevelopment())
 {
     app.UseHttpsRedirection();
 }
 
-app.UseAuthentication();
-
-app.UseCors("AllowFrontend");
-
-app.UseAuthorization();
 
 app.MapControllers();
 

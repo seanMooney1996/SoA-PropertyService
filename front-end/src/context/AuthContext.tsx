@@ -1,3 +1,4 @@
+import api from "@/api/client";
 import { createContext, useState, useEffect, ReactNode } from "react";
 
 export interface User {
@@ -8,7 +9,7 @@ export interface User {
 
 interface AuthContextType {
   user: User | null;
-  login: (user: User, token: string) => void;
+  login: (user: User) => void;
   logout: () => void;
 }
 
@@ -22,19 +23,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (saved) setUser(JSON.parse(saved));
   }, []);
 
-  const login = (user: User, token: string) => {
-    console.log("login with user -"+ JSON.stringify(user))
+  const login = (user: User) => {
     localStorage.setItem("user", JSON.stringify(user));
-    localStorage.setItem("token", token);
     setUser(user);
   };
 
-  const logout = () => {
-    localStorage.removeItem("user");
-    localStorage.removeItem("token");
-    setUser(null);
-    console.log("logged out");
-  };
+const logout = async () => {
+  try {
+    await api.post("/Auth/logout", {}, { withCredentials: true });
+  } catch {
+   localStorage.clear()
+  }
+
+  localStorage.clear();
+  setUser(null);
+};
 
   return (
     <AuthContext.Provider value={{ user, login, logout }}>
