@@ -88,6 +88,7 @@ namespace Database.Controllers
             {
                 Id =  Guid.NewGuid(),
                 LandlordId = Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value),
+                TenantId = null,
                 AddressLine1 = propertyDto.AddressLine1,
                 City = propertyDto.City,
                 County = propertyDto.County,

@@ -1,11 +1,14 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Claims;
 using System.Threading.Tasks;
+using Database.DTOs.Property;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Database.Models;
+using Microsoft.AspNetCore.Authorization;
 
 namespace Database.Controllers
 {
@@ -103,6 +106,54 @@ namespace Database.Controllers
         private bool TenantExists(Guid id)
         {
             return _context.Tenants.Any(e => e.Id == id);
+        }
+        
+        // GET /Tenant/myRental
+        [Authorize]
+        [HttpGet("myRental")]
+        public async Task<ActionResult<PropertyDto>> GetMyRental()
+        {
+            var tenantId = Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+
+            var property = await _context.Properties
+                .Where(p => p.TenantId == tenantId)
+                .FirstOrDefaultAsync();
+
+            if (property == null)
+                return Ok(null); 
+
+            return new PropertyDto
+            {
+                Id = property.Id,
+                AddressLine1 = property.AddressLine1!,
+                City = property.City!,
+                County = property.County!,
+                Bedrooms = property.Bedrooms,
+                Bathrooms = property.Bathrooms,
+                RentPrice = property.RentPrice,
+            };
+        }
+        
+        // GET /Tenant/openRentals
+        [Authorize]
+        [HttpGet("openRentals")]
+        public async Task<ActionResult<IEnumerable<PropertyDto>>> GetOpenRentals()
+        {
+            var properties = await _context.Properties
+                .Where(p => p.TenantId == null)
+                .Select(p => new PropertyDto
+                {
+                    Id = p.Id,
+                    AddressLine1 = p.AddressLine1!,
+                    City = p.City!,
+                    County = p.County!,
+                    Bedrooms = p.Bedrooms,
+                    Bathrooms = p.Bathrooms,
+                    RentPrice = p.RentPrice
+                })
+                .ToListAsync();
+
+            return Ok(properties);
         }
     }
 }

@@ -4,6 +4,7 @@ public class Property
 {
     public Guid Id { get; set; }
     public Guid LandlordId { get; set; }
+    public Guid? TenantId { get; set; } 
     public string? AddressLine1 { get; set; }
     public string? City { get; set; }
     public string? County { get; set; }
