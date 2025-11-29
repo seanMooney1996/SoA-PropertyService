@@ -116,6 +116,11 @@ namespace Database.Controllers
                 return NotFound();
             }
 
+            if (!@property.IsAvailable)
+            {
+                return Conflict("Property cannot be deleted while occupied or unavailable.");
+            }
+
             _context.Properties.Remove(@property);
             await _context.SaveChangesAsync();
 

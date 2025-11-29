@@ -4,8 +4,10 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import api from "@/api/client";
 import { useState } from "react";
+import { toast } from "sonner"
 
-export function CreatePropertyForm() {
+
+export function CreatePropertyForm({ reloadProperties }: { reloadProperties: () => void }) {
   const [addressLine1, setAddressLine1] = useState("");
   const [city, setCity] = useState("");
   const [county, setCounty] = useState("");
@@ -23,11 +25,10 @@ export function CreatePropertyForm() {
         bathrooms,
         rentPrice,
       });
-
-      alert("Property created");
+      toast.success("Saved!", {description: "Your property was added to the system."})
+      reloadProperties()
     } catch {
-      alert("Failed to create property");
-      console.log("Token at create property:", localStorage.getItem("token"));
+      toast.error("Something went wrong when creating property.")
     }
   };
 
