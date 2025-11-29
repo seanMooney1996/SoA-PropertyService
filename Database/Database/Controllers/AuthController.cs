@@ -97,7 +97,8 @@ namespace Database.Controllers
             {
                 UserId = auth.Id,
                 Email = auth.Email,
-                FirstName = dto.FirstName
+                FirstName = dto.FirstName,
+                Role = auth.Role
             };
 
             return Ok(response);
@@ -150,7 +151,8 @@ namespace Database.Controllers
             {
                 UserId = user.Id,
                 Email = user.Email,
-                FirstName = fName
+                FirstName = fName,
+                Role = user.Role
             };
 
             return Ok(response);

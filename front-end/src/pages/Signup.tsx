@@ -30,7 +30,7 @@ export default function SignupPage() {
       });
 
       login(
-        { userId: res.data.userId, email: res.data.email, fname: firstName }
+        { userId: res.data.userId, email: res.data.email, fname: firstName, role: res.data.role }
       );
 
       navigate("/", { replace: true });
