@@ -84,13 +84,6 @@ namespace Database.Controllers
         [HttpPost]
         public async Task<ActionResult<Property>> PostProperty(CreatePropertyDto propertyDto)
         {
-            
-            Console.WriteLine("RAW AUTH HEADER: " + Request.Headers.Authorization);
-            Console.WriteLine("CLAIMS IN USER:");
-            foreach (var c in User.Claims)
-            {
-                Console.WriteLine($"{c.Type} = {c.Value}");
-            }
             var property = new Property()
             {
                 Id =  Guid.NewGuid(),
