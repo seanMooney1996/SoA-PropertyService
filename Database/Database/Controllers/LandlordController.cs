@@ -1,4 +1,6 @@
+using System.Security.Claims;
 using Database.DTOs.Landlord;
+using Database.DTOs.Property;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Database.Models;
@@ -111,6 +113,30 @@ namespace Database.Controllers
             await _context.SaveChangesAsync();
 
             return NoContent();
+        }
+        
+        // GET: api/Property/mine
+        [Authorize]
+        [HttpGet("mine")]
+        public async Task<ActionResult<IEnumerable<PropertyDto>>> GetMyProperties()
+        {
+            var landlordId = Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value);
+
+            var properties = await _context.Properties
+                .Where(p => p.LandlordId == landlordId)
+                .Select(p => new PropertyDto
+                {
+                    AddressLine1 = p.AddressLine1,
+                    City = p.City,
+                    County = p.County,
+                    Bedrooms = p.Bedrooms,
+                    Bathrooms = p.Bathrooms,
+                    RentPrice = p.RentPrice,
+                    IsAvailable = p.IsAvailable
+                })
+                .ToListAsync();
+
+            return Ok(properties);
         }
     }
 }

@@ -56,7 +56,7 @@ namespace Database.Migrations
                     Bedrooms = table.Column<int>(type: "INTEGER", nullable: false),
                     Bathrooms = table.Column<int>(type: "INTEGER", nullable: false),
                     RentPrice = table.Column<long>(type: "INTEGER", nullable: false),
-                    IsAvailable = table.Column<bool>(type: "INTEGER", nullable: false),
+                    IsAvailable = table.Column<bool>(type: "BOOL", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
                     UpdatedAt = table.Column<DateTime>(type: "TEXT", nullable: false)
                 },

@@ -1,13 +1,50 @@
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { TopBar } from "@/components/top-bar";
-import { DashboardMain } from "@/components/dashboard-main";
+import { useEffect, useState } from "react"
+import api from "@/api/client"
+
+import { Button } from "@/components/ui/button"
+import { Separator } from "@/components/ui/separator"
+import { TopBar } from "@/components/top-bar"
+import { DashboardMain } from "@/components/dashboard-main"
+import { StatCard } from "@/components/stat-card"
+
+interface PropertyDto {
+  addressLine1: string
+  city: string
+  county: string
+  bedrooms: number
+  bathrooms: number
+  rentPrice: number
+  isAvailable: boolean
+}
 
 export default function DashboardPage() {
+  const [properties, setProperties] = useState<PropertyDto[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const res = await api.get("/Landlord/mine")
+        setProperties(res.data)
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchData()
+  }, [])
+
+  if (loading) return <p>Loading...</p>
+
+  const totalProperties = properties.length
+  const activeTenants = properties.filter(p => !p.isAvailable).length
+  const availableProperties = properties.filter(p => p.isAvailable).length
+  const pendingApplications = 3 // placeholder for now
+  const monthlyRent = properties.reduce((sum, p) => sum + p.rentPrice, 0)
+  
+
   return (
     <div className="flex h-screen w-full">
+
       {/* Sidebar */}
       <aside className="w-64 border-r bg-white p-6 hidden md:block">
         <h2 className="text-xl font-semibold mb-6">Dashboard</h2>
@@ -30,52 +67,23 @@ export default function DashboardPage() {
 
       {/* Main */}
       <main className="flex-1 p-6">
-        {/* Top Bar */}
-        <TopBar></TopBar>
+
+        <TopBar />
 
         <Separator className="mb-6" />
 
-        {/* Grid Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Total Properties</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-3xl font-bold">12</p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Active Tenants</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-3xl font-bold">8</p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Pending Applications</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-3xl font-bold">3</p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Monthly Rent</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-3xl font-bold">€6,450</p>
-            </CardContent>
-          </Card>
+        <div className="grid grid-cols-5 gap-6">
+          <StatCard title="Total Properties" value={totalProperties} />
+          <StatCard title="Active Tenants" value={activeTenants} />
+          <StatCard title="Available Properties" value={availableProperties} />
+          <StatCard title="Pending Applications" value={pendingApplications} />
+          <StatCard title="Monthly Rent" value={`€${monthlyRent}`} />
         </div>
 
-        <DashboardMain></DashboardMain>
+        {/* Main Section */}
+        <DashboardMain properties={properties} />
+
       </main>
     </div>
-  );
+  )
 }
