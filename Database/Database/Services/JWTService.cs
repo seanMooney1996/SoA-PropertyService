@@ -14,7 +14,7 @@
         {
             _config = config;
         }
-        public string GenerateToken(Guid userId, string email)
+        public string GenerateToken(Guid userId, string email,string role)
         {
             var jwtSettings = _config.GetSection("JwtSettings");
             Console.WriteLine("SIGNING KEY LENGTH: " + jwtSettings["Key"]!.Length);
@@ -26,6 +26,7 @@
             {
                 new Claim(JwtRegisteredClaimNames.Sub, userId.ToString()),
                 new Claim(JwtRegisteredClaimNames.UniqueName, email),
+                new Claim(ClaimTypes.Role, role),
                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
             };
             
