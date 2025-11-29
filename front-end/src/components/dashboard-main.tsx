@@ -3,9 +3,13 @@ import { Button } from "@/components/ui/button"
 import { CreatePropertyForm } from "./create-property-form"
 import { PropertyTable, PropertyDto } from "./property-table"
 
-export function DashboardMain({ properties }: { properties: PropertyDto[] }) {
+export function DashboardMain({ properties, reloadProperties}: { properties: PropertyDto[]; reloadProperties: () => void }) {
   const [activePanel, setActivePanel] = useState<"create" | "properties">("properties")
 
+      const reloadPropertiesAndSetPanel = async () => {
+        reloadProperties()
+        setActivePanel("properties")
+    }
   return (
     <div className="mt-8">
       <h2 className="text-xl font-semibold mb-4">Quick Actions</h2>
@@ -26,11 +30,13 @@ export function DashboardMain({ properties }: { properties: PropertyDto[] }) {
         </Button>
       </div>
 
-      {activePanel === "create" && <CreatePropertyForm />}
+    {activePanel === "create" && (
+      <CreatePropertyForm reloadProperties={reloadPropertiesAndSetPanel} />
+    )}
 
-      {activePanel === "properties" && (
-        <PropertyTable properties={properties} />
-      )}
+    {activePanel === "properties" && (
+      <PropertyTable properties={properties} reloadProperties={reloadPropertiesAndSetPanel} />
+    )}
     </div>
   )
 }

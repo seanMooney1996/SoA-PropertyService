@@ -126,6 +126,7 @@ namespace Database.Controllers
                 .Where(p => p.LandlordId == landlordId)
                 .Select(p => new PropertyDto
                 {
+                    Id = p.Id,
                     AddressLine1 = p.AddressLine1,
                     City = p.City,
                     County = p.County,

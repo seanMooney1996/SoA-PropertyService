@@ -11,6 +11,7 @@ import { useNavigate } from "react-router-dom";
 
 
 export function TopBar({
+    title,
   ...props
 }:  React.ComponentProps<"div">) {
  const { logout,user } = useContext(AuthContext)!;
@@ -18,7 +19,7 @@ export function TopBar({
  console.log(user?.fname)
   return (
         <div className="flex items-center justify-between mb-6">
-          <h1 className="text-2xl font-bold">Overview</h1>
+          <h1 className="text-2xl font-bold">{title}</h1>
 
           <div className="flex items-center gap-3">
             <Avatar>
