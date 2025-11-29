@@ -5,6 +5,7 @@ export interface User {
   userId: string;
   email: string;
   fname: string;
+  role: string;
 }
 
 interface AuthContextType {
@@ -20,7 +21,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const saved = localStorage.getItem("user");
-    if (saved) setUser(JSON.parse(saved));
+    if (saved) {
+      setUser(JSON.parse(saved));
+    }
   }, []);
 
   const login = (user: User) => {
@@ -28,16 +31,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(user);
   };
 
-const logout = async () => {
-  try {
-    await api.post("/Auth/logout", {}, { withCredentials: true });
-  } catch {
-   localStorage.clear()
-  }
 
-  localStorage.clear();
-  setUser(null);
-};
+  const logout = async () => {
+    try {
+      await api.post("/Auth/logout", {}, { withCredentials: true });
+    } catch {
+      console.warn("Logout failed ");
+    }
+
+    localStorage.clear();
+    setUser(null);
+  };
 
   return (
     <AuthContext.Provider value={{ user, login, logout }}>
