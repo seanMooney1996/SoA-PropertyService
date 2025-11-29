@@ -1,5 +1,7 @@
+using System.IdentityModel.Tokens.Jwt;
 using System.Text;
 using Database.Models;
+using Database.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -7,28 +9,78 @@ using Microsoft.IdentityModel.Tokens;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Services.AddControllers().AddJsonOptions(options =>
+{
+    options.JsonSerializerOptions.Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping;
+});
+JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
+JwtSecurityTokenHandler.DefaultOutboundClaimTypeMap.Clear();
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
+        
+        var jwtSettings = builder.Configuration.GetSection("JwtSettings");
+        var key = jwtSettings.GetValue<string>("Key");
+        Console.WriteLine("JWT KEY IN STARTUP: " + key);
+        Console.WriteLine("JWT KEY LENGTH: " + key.Length);
+
+        options.Events = new JwtBearerEvents
+        {
+            OnMessageReceived = ctx =>
+            {
+                Console.WriteLine("JWT MIDDLEWARE RECEIVED TOKEN: " + (ctx.Token ?? "NULL"));
+
+                if (ctx.Request.Cookies.TryGetValue("authToken", out var token))
+                {
+                    Console.WriteLine("COOKIE READ BY MIDDLEWARE: " + token);
+                    ctx.Token = token;
+                }
+
+                return Task.CompletedTask;
+            }
+        };
         options.TokenValidationParameters = new TokenValidationParameters
         {
-            ValidateIssuer = true,
-            ValidateAudience = true,
+            ValidateIssuer = false,
+            ValidateAudience = false,
             ValidateLifetime = true,
             ValidateIssuerSigningKey = true,
-            ValidIssuer = "yourdomain.com",
-            ValidAudience = "yourdomain.com",
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("your_super_secret_key"))
+            IssuerSigningKey = new SymmetricSecurityKey(
+                Encoding.UTF8.GetBytes(key)
+            ),
+            ClockSkew = TimeSpan.Zero
         };
     });
+
+
+
+builder.Services.AddAuthorization();
+
 var connectionString = builder.Configuration.GetConnectionString("PropertyService") ?? "Data Source=PropertyService.db";
 // Add services to the container.
+builder.Services.AddScoped<JwtService>();
+
+
 builder.Services.AddDbContext<PropertyServiceContext>(options =>
     options.UseSqlite(connectionString));
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowFrontend", policy =>
+    {
+        policy
+            .WithOrigins("https://localhost:5173")
+            .AllowCredentials()
+            .AllowAnyMethod()
+            .AllowAnyHeader()
+            .SetPreflightMaxAge(TimeSpan.FromHours(1))
+            .WithExposedHeaders("Authorization");
+    });
+});
 
 var app = builder.Build();
 
@@ -39,11 +91,15 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseHttpsRedirection();
-
+app.UseCors("AllowFrontend");
 app.UseAuthentication();
-
 app.UseAuthorization();
+
+if (!app.Environment.IsDevelopment())
+{
+    app.UseHttpsRedirection();
+}
+
 
 app.MapControllers();
 
