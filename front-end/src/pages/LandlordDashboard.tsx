@@ -7,6 +7,7 @@ import { Sidebar } from "@/components/sidebar";
 import { DashboardMain } from "@/components/dashboard-main";
 import { StatCard } from "@/components/stat-card";
 import RequestsTable from "@/components/requests-table";
+import { toast } from "sonner";
 
 interface PropertyDto {
   id: string;
@@ -56,12 +57,28 @@ export default function LandlordDashboard() {
     setRequests(res.data);
   };
 
-  const approveRequest = () => {
-    console.log("approved");
+  const approveRequest = async (id: string) => {
+    try {
+      const res = await api.post(`/Landlord/requests/${id}/approve`);
+      toast.success("Request approved!", {
+        description: "The tenants request was approved",
+      });
+      fetchData();
+    } catch (er) {
+      toast.error("Error!", { description: "Unsuccesful" });
+    }
   };
 
-  const declineRequest = () => {
-    console.log("declined");
+  const declineRequest = async (id: string) => {
+    try {
+      const res = await api.post(`/Landlord/requests/${id}/decline`);
+      toast.success("Request Declined!", {
+        description: "The tenants request was declined",
+      });
+      fetchData();
+    } catch (er) {
+      toast.error("Error!", { description: "Unsuccesful" });
+    }
   };
 
   useEffect(() => {

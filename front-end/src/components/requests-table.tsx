@@ -39,12 +39,12 @@ export default function RequestsTable({
       columns={columns}
       actions={(row) => (
         <>
-          {mode === "landlord" && (
+          {mode === "landlord" && row.status == "Pending" && (
             <div className="flex gap-2">
               <Button
                 size="sm"
                 className="bg-green-600"
-                onClick={() => onApprove && onApprove(row.requestId)}
+                onClick={() => onApprove && onApprove(row.id)}
               >
                 Approve
               </Button>
@@ -52,7 +52,7 @@ export default function RequestsTable({
               <Button
                 size="sm"
                 className="bg-red-600"
-                onClick={() => onDecline && onDecline(row.requestId)}
+                onClick={() => onDecline && onDecline(row.id)}
               >
                 Decline
               </Button>
@@ -63,7 +63,7 @@ export default function RequestsTable({
             <Button
               size="sm"
               variant="destructive"
-              onClick={() => onCancel && onCancel(row.requestId)}
+              onClick={() => onCancel && onCancel(row.id)}
             >
               Remove
             </Button>
