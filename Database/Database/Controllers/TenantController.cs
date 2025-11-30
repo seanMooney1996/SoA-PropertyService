@@ -4,6 +4,7 @@ using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using Database.DTOs.Property;
+using Database.DTOs.Request;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -155,6 +156,8 @@ namespace Database.Controllers
             return Ok(properties);
         }
         
+        
+        [Authorize]
         [HttpPost("request/{propertyId:guid}")]
         public async Task<ActionResult<RentalRequest>> CreateRentalRequest(Guid propertyId)
         {
@@ -191,6 +194,58 @@ namespace Database.Controllers
             await _context.SaveChangesAsync();
     
             return Ok(request);
+        }
+        
+        [Authorize]
+        [HttpGet("request/myRequests")]
+        public async Task<ActionResult<RentalRequest>> GetMyRequests()
+        {
+            var tenantIdString = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (tenantIdString == null)
+                return Unauthorized("No tenant id in token");
+        
+            var tenantId = Guid.Parse(tenantIdString);
+            
+            var requests = await _context.RentalRequests
+                .Where(r => r.TenantId == tenantId)
+                .OrderByDescending(r => r.RequestedAt)
+                .Select(r => new RentalRequestDto
+                {
+                    Id = r.Id,
+                    PropertyId = r.PropertyId,
+                    Address = r.Property.AddressLine1!,
+                    City = r.Property.City!,
+                    County = r.Property.County!,
+                    TenantId = r.TenantId,
+                    TenantName = (r.Tenant.FirstName + " " + r.Tenant.LastName).Trim(),
+                    Status = r.Status,
+                    RequestedAt = r.RequestedAt
+                })
+                .ToListAsync();
+            
+            return Ok(requests);
+        }
+        
+        [Authorize]
+        [HttpPost("request/{propertyId:guid}/cancel")]
+        public async Task<ActionResult<RentalRequest>> CancelRentalRequest(Guid propertyId)
+        {
+            var tenantIdStr = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (tenantIdStr == null)
+                return Unauthorized("No tenant ID in token");
+        
+            var tenantId = Guid.Parse(tenantIdStr);
+            
+            var request = await _context.RentalRequests
+                .FirstOrDefaultAsync(r => r.TenantId == tenantId && r.PropertyId == propertyId);
+
+            if (request == null)
+                return NotFound("No request found for this property.");
+
+            _context.RentalRequests.Remove(request);
+            await _context.SaveChangesAsync();
+            
+            return Ok(new { message = "Request cancelled successfully." });
         }
     }
 }

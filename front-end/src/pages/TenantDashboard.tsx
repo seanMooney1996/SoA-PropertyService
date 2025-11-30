@@ -1,61 +1,89 @@
-import { useEffect, useState } from "react"
-import api from "@/api/client"
+import { useEffect, useState } from "react";
+import api from "@/api/client";
 
-import { Separator } from "@/components/ui/separator"
-import { TopBar } from "@/components/top-bar"
-import { Sidebar } from "@/components/sidebar"
-import { StatCard } from "@/components/stat-card"
-import OpenRentalsTable from "@/components/tenant-components/open-rentals-table"
-import { toast } from "sonner"
-
+import { Separator } from "@/components/ui/separator";
+import { TopBar } from "@/components/top-bar";
+import { Sidebar } from "@/components/sidebar";
+import { StatCard } from "@/components/stat-card";
+import OpenRentalsTable from "@/components/tenant-components/open-rentals-table";
+import { toast } from "sonner";
+import RequestsTable from "@/components/requests-table";
 
 interface TenantPropertyDto {
-  id: string
-  addressLine1: string
-  city: string
-  county: string
-  bedrooms: number
-  bathrooms: number
-  rentPrice: number
+  id: string;
+  addressLine1: string;
+  city: string;
+  county: string;
+  bedrooms: number;
+  bathrooms: number;
+  rentPrice: number;
+}
+
+interface RequestsDto {
+  id: string;
+  propertyId: string;
+  tenantId: string;
+  status: string;
+  city: string;
+  requestedAt: string;
+  tenantName: string;
+  address: string;
+  county: string;
 }
 
 export default function TenantDashboard() {
-  const [activeSection, setActiveSection] = useState("Overview")
-  const [myRental, setMyRental] = useState<TenantPropertyDto | null>(null)
-  const [openRentals, setOpenRentals] = useState<TenantPropertyDto[]>([])
-  const [loading, setLoading] = useState(true)
+  const [activeSection, setActiveSection] = useState("Overview");
+  const [myRental, setMyRental] = useState<TenantPropertyDto | null>(null);
+  const [openRentals, setOpenRentals] = useState<TenantPropertyDto[]>([]);
+  const [myRequests, setRequests] = useState<RequestsDto[]>([]);
+  const [loading, setLoading] = useState(true);
 
   const fetchData = async () => {
     try {
-      const rentalRes = await api.get("/Tenant/myRental")
-      const openRes = await api.get("/Tenant/openRentals")
-
-      setMyRental(rentalRes.data)
-      setOpenRentals(openRes.data)
+      const rentalRes = await api.get("/Tenant/myRental");
+      const openRes = await api.get("/Tenant/openRentals");
+      const requestsRes = await api.get("/Tenant/request/myRequests");
+      setMyRental(rentalRes.data);
+      setOpenRentals(openRes.data);
+      setRequests(requestsRes.data);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   useEffect(() => {
-    fetchData()
-  }, [])
+    fetchData();
+  }, []);
 
-  if (loading) return <p>Loading...</p>
+  const cancelRequest = async (propertyId: string) => {
+    try {
+      await api.post(`/Tenant/request/${propertyId}/cancel`);
+      toast.success("Request cancelled", {
+        description: "Your rental request has been removed.",
+      });
+      fetchData();
+    } catch (err) {
+      console.error(err);
+      toast.error("Error cancelling request", {
+        description: "Unable to cancel the request. Try again later.",
+      });
+    }
+  };
 
-  const rentalActive = myRental && myRental.id != null
-  const rentalStatus = rentalActive ? "Active Lease" : "Not Renting"
-  const monthlyRent = rentalActive ? `€${myRental!.rentPrice}` : "N/A"
-  console.log("myRental "+myRental)
-  console.log("rentalStatus "+rentalStatus)
-  console.log("monthlyRent "+monthlyRent)
+  if (loading) return <p>Loading...</p>;
 
+  const rentalActive = myRental && myRental.id != null;
+  const rentalStatus = rentalActive ? "Active Lease" : "Not Renting";
+  const monthlyRent = rentalActive ? `€${myRental!.rentPrice}` : "N/A";
+  console.log("myRental " + myRental);
+  console.log("rentalStatus " + rentalStatus);
+  console.log("monthlyRent " + monthlyRent);
 
   const requestRental = async (id: string) => {
     try {
       const res = await api.post(`/Tenant/request/${id}`);
       toast.success("Request Sent", {
-        description: "Your request for this property was submitted."
+        description: "Your request for this property was submitted.",
       });
       fetchData();
     } catch (err: any) {
@@ -63,13 +91,12 @@ export default function TenantDashboard() {
         err?.response?.data ?? "Failed to request property. Try again later.";
 
       toast.error("Request Failed", {
-        description: message
+        description: message,
       });
 
       console.error("Error sending request:", err);
     }
   };
-
 
   return (
     <div className="flex h-screen w-full">
@@ -98,35 +125,58 @@ export default function TenantDashboard() {
                 <h2 className="text-2xl font-semibold">Your Rental Property</h2>
 
                 <div className="p-4 border rounded-md shadow-sm bg-white space-y-2">
-                  <p><strong>Address:</strong> {myRental.addressLine1}</p>
-                  <p><strong>City:</strong> {myRental.city}</p>
-                  <p><strong>County:</strong> {myRental.county}</p>
-                  <p><strong>Bedrooms:</strong> {myRental.bedrooms}</p>
-                  <p><strong>Bathrooms:</strong> {myRental.bathrooms}</p>
-                  <p><strong>Monthly Rent:</strong> €{myRental.rentPrice}</p>
-                  <p><strong>Status:</strong> {rentalStatus}</p>
+                  <p>
+                    <strong>Address:</strong> {myRental.addressLine1}
+                  </p>
+                  <p>
+                    <strong>City:</strong> {myRental.city}
+                  </p>
+                  <p>
+                    <strong>County:</strong> {myRental.county}
+                  </p>
+                  <p>
+                    <strong>Bedrooms:</strong> {myRental.bedrooms}
+                  </p>
+                  <p>
+                    <strong>Bathrooms:</strong> {myRental.bathrooms}
+                  </p>
+                  <p>
+                    <strong>Monthly Rent:</strong> €{myRental.rentPrice}
+                  </p>
+                  <p>
+                    <strong>Status:</strong> {rentalStatus}
+                  </p>
                 </div>
               </>
             ) : (
-              <p className="text-muted-foreground">You are not currently renting any property.</p>
+              <p className="text-muted-foreground">
+                You are not currently renting any property.
+              </p>
             )}
           </div>
         )}
 
         {activeSection === "Open Rentals" && (
           <div>
-            <h2 className="text-2xl font-semibold mb-4">Available Properties</h2>
-            <OpenRentalsTable
-              rentals={openRentals}
-              onRequest={requestRental}
-            />
+            <h2 className="text-2xl font-semibold mb-4">
+              Available Properties
+            </h2>
+            <OpenRentalsTable rentals={openRentals} onRequest={requestRental} />
           </div>
         )}
 
         {activeSection === "Payments" && (
           <p className="text-muted-foreground">Payments</p>
         )}
+
+        {activeSection === "Requests" && (
+          <RequestsTable
+            mode="tenant"
+            requests={myRequests}
+            onCancel={(id) => cancelRequest(id)}
+          />
+        )}
       </main>
     </div>
-  )
+  );
 }

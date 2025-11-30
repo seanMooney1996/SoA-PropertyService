@@ -29,6 +29,7 @@ interface RequestsDto {
   requestedAt: string;
   tenantName: string;
   address: string;
+  county: string;
 }
 
 export default function LandlordDashboard() {

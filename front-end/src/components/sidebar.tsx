@@ -15,7 +15,7 @@ export function Sidebar({ active, onNavigate, role }: SidebarProps) {
     "Requests",
   ];
 
-  const tenantNav = ["Overview", "My Rental", "Open Rentals", "Payments"];
+  const tenantNav = ["Overview", "My Rental", "Open Rentals", "Requests"];
 
   const navItems = role === "landlord" ? landlordNav : tenantNav;
 

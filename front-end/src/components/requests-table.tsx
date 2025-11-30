@@ -1,6 +1,17 @@
 import { DataTable, Column } from "@/components/data-table";
 import { Button } from "@/components/ui/button";
-import { RentalRequestDto } from "@/types/rental-request";
+
+interface RequestsDto {
+  id: string;
+  propertyId: string;
+  tenantId: string;
+  status: string;
+  city: string;
+  county: string;
+  requestedAt: string;
+  tenantName: string;
+  address: string;
+}
 
 export default function RequestsTable({
   requests,
@@ -9,13 +20,13 @@ export default function RequestsTable({
   onDecline,
   onCancel,
 }: {
-  requests: RentalRequestDto[];
+  requests: RequestsDto[];
   mode: "tenant" | "landlord";
   onApprove?: (id: string) => void;
   onDecline?: (id: string) => void;
   onCancel?: (id: string) => void;
 }) {
-  const columns: Column<RentalRequestDto>[] = [
+  const columns: Column<RequestsDto>[] = [
     { header: "Address", accessor: (r) => r.address },
     { header: "City", accessor: (r) => r.city },
     { header: "County", accessor: (r) => r.county },
@@ -59,7 +70,7 @@ export default function RequestsTable({
             </div>
           )}
 
-          {mode === "tenant" && (
+          {mode === "tenant" && row.status == "Pending" && (
             <Button
               size="sm"
               variant="destructive"
