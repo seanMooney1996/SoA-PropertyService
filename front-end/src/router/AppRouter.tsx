@@ -9,23 +9,23 @@ import { AuthContext } from "@/context/AuthContext";
 import { useContext } from "react";
 
 export default function AppRouter() {
-
   function RoleRedirect() {
-  const { user } = useAuth();
-  if (!user) return <Navigate to="/login" replace />;
-  if (user.role === "landlord") return <Navigate to="/landlord" replace />;
-  if (user.role === "tenant") return <Navigate to="/tenant" replace />;
+    const { user } = useAuth();
 
-  return <Navigate to="/login" replace />;
-}
+    if (!user) return <Navigate to="/login" replace />;
+    console.log("User role ->" + user.role);
+    if (user.role === "landlord") return <Navigate to="/landlord" replace />;
+    if (user.role === "tenant") return <Navigate to="/tenant" replace />;
+
+    return <Navigate to="/login" replace />;
+  }
   return (
     <BrowserRouter>
       <Routes>
         <Route path="/login" element={<Login />} />
-        <Route path="/signup" element={<Signup/>} />
+        <Route path="/signup" element={<Signup />} />
 
         <Route path="/" element={<RoleRedirect />} />
-
 
         <Route
           path="/landlord"

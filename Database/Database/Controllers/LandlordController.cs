@@ -116,9 +116,9 @@ namespace Database.Controllers
             return NoContent();
         }
         
-        // GET: api/Property/mine
+        // GET: api/Property/properties
         [Authorize]
-        [HttpGet("mine")]
+        [HttpGet("properties")]
         public async Task<ActionResult<IEnumerable<PropertyDto>>> GetMyProperties()
         {
             var landlordId = Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value);
@@ -141,6 +141,7 @@ namespace Database.Controllers
             return Ok(properties);
         }
         
+        // GET: api/Request/requests
         [Authorize]
         [HttpGet("requests")]
         public async Task<ActionResult<IEnumerable<RentalRequestDto>>> GetMyRequests()
@@ -165,8 +166,11 @@ namespace Database.Controllers
                     RequestedAt = r.RequestedAt
                 })
                 .ToListAsync();
-
+            Console.WriteLine(requests[0].Address);
             return Ok(requests);
         }
+        
+        
+        
     }
 }
