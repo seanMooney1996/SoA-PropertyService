@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using Database.DTOs.Landlord;
 using Database.DTOs.Property;
+using Database.DTOs.Request;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Database.Models;
@@ -138,6 +139,34 @@ namespace Database.Controllers
                 .ToListAsync();
 
             return Ok(properties);
+        }
+        
+        [Authorize]
+        [HttpGet("requests")]
+        public async Task<ActionResult<IEnumerable<RentalRequestDto>>> GetMyRequests()
+        {
+            var landlordId = Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+
+            // using navigation property to avoid joining of tables.
+            var requests = await _context.RentalRequests
+                // navigation property coming in useful for accessing property.landlordId
+                .Where(r => r.Property.LandlordId == landlordId)
+                .OrderByDescending(r => r.RequestedAt)
+                .Select(r => new RentalRequestDto
+                {
+                    Id = r.Id,
+                    PropertyId = r.PropertyId,
+                    Address = r.Property.AddressLine1!,
+                    City = r.Property.City!,
+                    County = r.Property.County!,
+                    TenantId = r.TenantId,
+                    TenantName = (r.Tenant.FirstName + " " + r.Tenant.LastName).Trim(),
+                    Status = r.Status,
+                    RequestedAt = r.RequestedAt
+                })
+                .ToListAsync();
+
+            return Ok(requests);
         }
     }
 }
