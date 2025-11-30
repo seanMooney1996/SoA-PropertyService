@@ -42,10 +42,12 @@ export default function TenantDashboard() {
 
   if (loading) return <p>Loading...</p>
 
-  const rentalActive = myRental != null
+  const rentalActive = myRental && myRental.propertyId != null
   const rentalStatus = rentalActive ? "Active Lease" : "Not Renting"
   const monthlyRent = rentalActive ? `€${myRental!.rentPrice}` : "N/A"
-
+  console.log("myRental "+myRental)
+  console.log("rentalStatus "+rentalStatus)
+  console.log("monthlyRent "+monthlyRent)
   const requestRental = async (propertyId: string) => {
     try {
       console.log("Requesting rental for:", propertyId)
