@@ -1,7 +1,7 @@
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
-import { CreatePropertyForm } from "./create-property-form"
-import { PropertyTable, PropertyDto } from "./property-table"
+import { CreatePropertyForm } from "./landlord-components/create-property-form"
+import { PropertyTable, PropertyDto } from "./landlord-components/property-table"
 
 export function DashboardMain({ properties, reloadProperties}: { properties: PropertyDto[]; reloadProperties: () => void }) {
   const [activePanel, setActivePanel] = useState<"create" | "properties">("properties")

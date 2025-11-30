@@ -15,5 +15,6 @@ public class PropertyServiceContext: DbContext
     public DbSet<RentRecord> RentRecords { get; set; } = null!;
     public DbSet<Authentication> Authentications { get; set; } = null!;
     
+    public DbSet<RentalRequest> RentalRequests { get; set; } = null!;
     
 }

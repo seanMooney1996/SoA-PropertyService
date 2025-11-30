@@ -3,45 +3,44 @@ import { Button } from "@/components/ui/button"
 interface SidebarProps {
   active: string
   onNavigate: (section: string) => void
+  role: "landlord" | "tenant"
 }
 
-export function Sidebar({ active, onNavigate }: SidebarProps) {
+export function Sidebar({ active, onNavigate, role }: SidebarProps) {
+
+  const landlordNav = [
+    "Overview",
+    "Properties",
+    "Tenants",
+    "Payments"
+  ]
+
+  const tenantNav = [
+    "Overview",
+    "My Rental",
+    "Open Rentals",
+    "Payments"
+  ]
+
+  const navItems = role === "landlord" ? landlordNav : tenantNav
+
   return (
     <aside className="w-64 border-r bg-white p-6 hidden md:block">
-      <h2 className="text-xl font-semibold mb-6">Property Service</h2>
+      <h2 className="text-xl font-semibold mb-6">
+        {role === "landlord" ? "Landlord Panel" : "Tenant Panel"}
+      </h2>
 
       <nav className="space-y-3">
-        <Button
-          className="w-full justify-start"
-          variant={active === "Overview" ? "default" : "ghost"}
-          onClick={() => onNavigate("Overview")}
-        >
-          Overview
-        </Button>
-
-        <Button
-          className="w-full justify-start"
-          variant={active === "Properties" ? "default" : "ghost"}
-          onClick={() => onNavigate("Properties")}
-        >
-          Properties
-        </Button>
-
-        <Button
-          className="w-full justify-start"
-          variant={active === "Tenants" ? "default" : "ghost"}
-          onClick={() => onNavigate("Tenants")}
-        >
-          Tenants
-        </Button>
-
-        <Button
-          className="w-full justify-start"
-          variant={active === "Payments" ? "default" : "ghost"}
-          onClick={() => onNavigate("Payments")}
-        >
-          Payments
-        </Button>
+        {navItems.map(item => (
+          <Button
+            key={item}
+            className="w-full justify-start"
+            variant={active === item ? "default" : "ghost"}
+            onClick={() => onNavigate(item)}
+          >
+            {item}
+          </Button>
+        ))}
       </nav>
     </aside>
   )

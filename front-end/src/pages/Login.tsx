@@ -17,7 +17,7 @@ export default function Login() {
       const res = await api.post("/auth/login", { email, password });
 
       login(
-        { userId: res.data.userId, email: res.data.email, fname: res.data.firstName }
+        { userId: res.data.userId, email: res.data.email, fname: res.data.firstName, role: res.data.role }
       );
 
       navigate("/", { replace: true });

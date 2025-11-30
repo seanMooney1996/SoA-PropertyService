@@ -78,7 +78,7 @@ namespace Database.Controllers
 
             await _context.SaveChangesAsync();
 
-            var token = _jwtService.GenerateToken(auth.Id, auth.Email);
+            var token = _jwtService.GenerateToken(auth.Id, auth.Email, auth.Role);
 
             Response.Cookies.Append(
                 "authToken",
@@ -97,7 +97,8 @@ namespace Database.Controllers
             {
                 UserId = auth.Id,
                 Email = auth.Email,
-                FirstName = dto.FirstName
+                FirstName = dto.FirstName,
+                Role = auth.Role
             };
 
             return Ok(response);
@@ -131,7 +132,7 @@ namespace Database.Controllers
                 fName = tenant?.FirstName ?? "";
             }
 
-            var token = _jwtService.GenerateToken(user.Id, user.Email);
+            var token = _jwtService.GenerateToken(user.Id, user.Email, user.Role);
 
             Response.Cookies.Append(
                 "authToken",
@@ -150,7 +151,8 @@ namespace Database.Controllers
             {
                 UserId = user.Id,
                 Email = user.Email,
-                FirstName = fName
+                FirstName = fName,
+                Role = user.Role
             };
 
             return Ok(response);

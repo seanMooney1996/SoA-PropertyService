@@ -18,7 +18,7 @@ interface PropertyDto {
   isAvailable: boolean
 }
 
-export default function DashboardPage() {
+export default function LandlordDashboard() {
   const [activeSection, setActiveSection] = useState("Overview")
   const [properties, setProperties] = useState<PropertyDto[]>([])
   const [loading, setLoading] = useState(true)
@@ -47,7 +47,7 @@ export default function DashboardPage() {
   return (
     <div className="flex h-screen w-full">
       
-      <Sidebar active={activeSection} onNavigate={setActiveSection} />
+      <Sidebar active={activeSection} onNavigate={setActiveSection}  role="tenant" />
 
       <main className="flex-1 p-6">
         <TopBar title={activeSection} />
