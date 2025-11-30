@@ -2,7 +2,7 @@ import { DataTable, Column } from "@/components/data-table"
 import { Button } from "@/components/ui/button"
 
 export interface OpenRentalDto {
-  propertyId: string
+  id: string
   addressLine1: string
   city: string
   county: string
@@ -32,7 +32,7 @@ export default function OpenRentalsTable({
       rows={rentals}
       columns={columns}
       actions={(r) => (
-        <Button size="sm" className="bg-blue-600" onClick={() => onRequest(r.propertyId)}>
+        <Button size="sm" className="bg-blue-600" onClick={() => onRequest(r.id)}>
           Request
         </Button>
       )}

@@ -21,7 +21,6 @@ namespace Database.Controllers
         public TenantController(PropertyServiceContext context)
         {
             _context = context;
-            context.Database.EnsureCreated();
         }
 
         // GET: api/Tenant
@@ -154,6 +153,44 @@ namespace Database.Controllers
                 .ToListAsync();
 
             return Ok(properties);
+        }
+        
+        [HttpPost("request/{propertyId:guid}")]
+        public async Task<ActionResult<RentalRequest>> CreateRentalRequest(Guid propertyId)
+        {
+            var tenantIdString = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (tenantIdString == null)
+                return Unauthorized("No tenant id in token");
+    
+            var tenantId = Guid.Parse(tenantIdString);
+            
+            //find property. Must have no tenant for request to be made
+            var property = await _context.Properties
+                .FirstOrDefaultAsync(p => p.Id == propertyId && p.TenantId == null);
+            
+            if (property == null)
+                return BadRequest("Property not available.");
+            
+            // If tenant already requested for property
+            var existingRequest = await _context.RentalRequests
+                .AnyAsync(r => r.TenantId == tenantId && r.PropertyId == propertyId && r.Status == "Pending");
+
+            if (existingRequest)
+                return BadRequest("You already have a pending request for this property.");
+            
+            var request = new RentalRequest
+            {
+                Id = Guid.NewGuid(),
+                TenantId = tenantId,
+                PropertyId = propertyId,
+                Status = "Pending",
+                RequestedAt = DateTime.UtcNow
+            };
+            
+            _context.RentalRequests.Add(request);
+            await _context.SaveChangesAsync();
+    
+            return Ok(request);
         }
     }
 }

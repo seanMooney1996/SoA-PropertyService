@@ -6,10 +6,11 @@ import { TopBar } from "@/components/top-bar"
 import { Sidebar } from "@/components/sidebar"
 import { StatCard } from "@/components/stat-card"
 import OpenRentalsTable from "@/components/tenant-components/open-rentals-table"
+import { toast } from "sonner"
 
 
 interface TenantPropertyDto {
-  propertyId: string
+  id: string
   addressLine1: string
   city: string
   county: string
@@ -42,21 +43,33 @@ export default function TenantDashboard() {
 
   if (loading) return <p>Loading...</p>
 
-  const rentalActive = myRental && myRental.propertyId != null
+  const rentalActive = myRental && myRental.id != null
   const rentalStatus = rentalActive ? "Active Lease" : "Not Renting"
   const monthlyRent = rentalActive ? `€${myRental!.rentPrice}` : "N/A"
   console.log("myRental "+myRental)
   console.log("rentalStatus "+rentalStatus)
   console.log("monthlyRent "+monthlyRent)
-  const requestRental = async (propertyId: string) => {
+
+
+  const requestRental = async (id: string) => {
     try {
-      console.log("Requesting rental for:", propertyId)
-      fetchData()
-    } catch (err) {
-      console.error(err)
-      alert("Failed to request rental.")
+      const res = await api.post(`/Tenant/request/${id}`);
+      toast.success("Request Sent", {
+        description: "Your request for this property was submitted."
+      });
+      fetchData();
+    } catch (err: any) {
+      const message =
+        err?.response?.data ?? "Failed to request property. Try again later.";
+
+      toast.error("Request Failed", {
+        description: message
+      });
+
+      console.error("Error sending request:", err);
     }
-  }
+  };
+
 
   return (
     <div className="flex h-screen w-full">
