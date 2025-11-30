@@ -7,13 +7,7 @@ interface SidebarProps {
 }
 
 export function Sidebar({ active, onNavigate, role }: SidebarProps) {
-  const landlordNav = [
-    "Overview",
-    "Properties",
-    "Tenants",
-    "Payments",
-    "Requests",
-  ];
+  const landlordNav = ["Overview", "Properties", "Requests"];
 
   const tenantNav = ["Overview", "My Rental", "Open Rentals", "Requests"];
 

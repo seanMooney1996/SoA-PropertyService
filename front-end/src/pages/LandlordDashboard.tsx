@@ -92,7 +92,12 @@ export default function LandlordDashboard() {
   const activeTenants = properties.filter((p) => !p.isAvailable).length;
   const availableProperties = properties.filter((p) => p.isAvailable).length;
   const pendingRequestSize = requests.length;
-  const monthlyRent = properties.reduce((sum, p) => sum + p.rentPrice, 0);
+  const confirmedIncome = properties
+    .filter((p) => !p.isAvailable)
+    .reduce((sum, p) => sum + p.rentPrice, 0);
+  const potentialIncome = properties
+    .filter((p) => p.isAvailable)
+    .reduce((sum, p) => sum + p.rentPrice, 0);
 
   return (
     <div className="flex h-screen w-full">
@@ -108,7 +113,7 @@ export default function LandlordDashboard() {
 
         {activeSection === "Overview" && (
           <>
-            <div className="grid grid-cols-2 gap-6">
+            <div className="grid grid-cols-3 gap-6">
               <StatCard title="Total Properties" value={totalProperties} />
               <StatCard title="Active Tenants" value={activeTenants} />
               <StatCard
@@ -116,21 +121,20 @@ export default function LandlordDashboard() {
                 value={availableProperties}
               />
               <StatCard title="Pending Requests" value={pendingRequestSize} />
-              <StatCard title="Monthly Rent" value={`€${monthlyRent}`} />
+              <StatCard
+                title="Confirmed Income"
+                value={`€${confirmedIncome}`}
+              />
+              <StatCard
+                title="Potential Income"
+                value={`€${potentialIncome}`}
+              />
             </div>
           </>
         )}
 
         {activeSection === "Properties" && (
           <DashboardMain properties={properties} reloadProperties={fetchData} />
-        )}
-
-        {activeSection === "Tenants" && (
-          <p className="text-muted-foreground">Placeholder</p>
-        )}
-
-        {activeSection === "Payments" && (
-          <p className="text-muted-foreground">Placeholder</p>
         )}
 
         {activeSection === "Requests" && (
