@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using Database.DTOs.Landlord;
 using Database.DTOs.Property;
+using Database.DTOs.Request;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Database.Models;
@@ -115,9 +116,9 @@ namespace Database.Controllers
             return NoContent();
         }
         
-        // GET: api/Property/mine
+        // GET: api/Property/properties
         [Authorize]
-        [HttpGet("mine")]
+        [HttpGet("properties")]
         public async Task<ActionResult<IEnumerable<PropertyDto>>> GetMyProperties()
         {
             var landlordId = Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value);
@@ -139,5 +140,93 @@ namespace Database.Controllers
 
             return Ok(properties);
         }
+        
+        // GET: api/Request/requests
+        [Authorize]
+        [HttpGet("requests")]
+        public async Task<ActionResult<IEnumerable<RentalRequestDto>>> GetMyRequests()
+        {
+            var landlordId = Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+
+            // using navigation property to avoid joining of tables.
+            var requests = await _context.RentalRequests
+                // navigation property coming in useful for accessing property.landlordId
+                .Where(r => r.Property.LandlordId == landlordId)
+                .OrderByDescending(r => r.RequestedAt)
+                .Select(r => new RentalRequestDto
+                {
+                    Id = r.Id,
+                    PropertyId = r.PropertyId,
+                    Address = r.Property.AddressLine1!,
+                    City = r.Property.City!,
+                    County = r.Property.County!,
+                    TenantId = r.TenantId,
+                    TenantName = (r.Tenant.FirstName + " " + r.Tenant.LastName).Trim(),
+                    Status = r.Status,
+                    RequestedAt = r.RequestedAt
+                })
+                .ToListAsync();
+            Console.WriteLine(requests[0].Address);
+            return Ok(requests);
+        }
+        
+        [Authorize]
+        [HttpPost("requests/{id:guid}/approve")]
+        public async Task<IActionResult> ApproveRequest(Guid id)
+        {
+            var request = await _context.RentalRequests.FindAsync(id);
+            if (request == null)
+                return NotFound("Request not found.");
+            
+            var landlordId = Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+            var property = await _context.Properties.FindAsync(request.PropertyId);
+            //make sure landlord exists on the property that is linked to the requests
+            if (property == null || property.LandlordId != landlordId)
+                return Unauthorized("User does not have permission to access this property.");
+
+            //cant approve non pending requests
+            if (request.Status != "Pending")
+                return BadRequest("Request not pending");
+            
+            request.Status = "Approved";
+            property.TenantId = request.TenantId;
+            property.IsAvailable = false;
+            
+            var otherRequests = _context.RentalRequests
+                .Where(r => r.PropertyId == request.PropertyId && r.Id != id);
+
+            // set other requests to declined
+            foreach (var r in otherRequests)
+                r.Status = "Declined";
+        
+            await _context.SaveChangesAsync();
+
+            return Ok("Request approved.");
+        }
+        
+        [Authorize]
+        [HttpPost("requests/{id:guid}/decline")]
+        public async Task<IActionResult> DeclineRequest(Guid id)
+        {
+            var request = await _context.RentalRequests.FindAsync(id);
+            if (request == null)
+                return NotFound("Request not found.");
+            
+            var landlordId = Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+            var property = await _context.Properties.FindAsync(request.PropertyId);
+            //make sure landlord exists on the property that is linked to the requests
+            if (property == null || property.LandlordId != landlordId)
+                return Unauthorized("User does not have permission to access this property.");
+
+            //cant decline non pending requests
+            if (request.Status != "Pending")
+                return BadRequest("Request not pending");
+            
+            request.Status = "Declined";
+            await _context.SaveChangesAsync();
+
+            return Ok("Request approved.");
+        }
+        
     }
 }

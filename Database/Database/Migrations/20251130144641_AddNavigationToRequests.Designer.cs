@@ -3,6 +3,7 @@ using System;
 using Database.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Database.Migrations
 {
     [DbContext(typeof(PropertyServiceContext))]
-    partial class PropertyServiceContextModelSnapshot : ModelSnapshot
+    [Migration("20251130144641_AddNavigationToRequests")]
+    partial class AddNavigationToRequests
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "8.0.22");
@@ -114,6 +117,32 @@ namespace Database.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Properties");
+                });
+
+            modelBuilder.Entity("Database.Models.RentRecord", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("EffectiveFrom")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("EffectiveTo")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("PropertyId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<long>("RecordedRent")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("RentRecords");
                 });
 
             modelBuilder.Entity("Database.Models.RentalRequest", b =>

@@ -14,4 +14,5 @@ public class Property
     public bool IsAvailable { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
+    public ICollection<RentalRequest> Requests { get; set; }
 }

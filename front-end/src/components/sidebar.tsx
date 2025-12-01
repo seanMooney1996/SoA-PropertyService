@@ -1,28 +1,17 @@
-import { Button } from "@/components/ui/button"
+import { Button } from "@/components/ui/button";
 
 interface SidebarProps {
-  active: string
-  onNavigate: (section: string) => void
-  role: "landlord" | "tenant"
+  active: string;
+  onNavigate: (section: string) => void;
+  role: "landlord" | "tenant";
 }
 
 export function Sidebar({ active, onNavigate, role }: SidebarProps) {
+  const landlordNav = ["Overview", "Properties", "Requests"];
 
-  const landlordNav = [
-    "Overview",
-    "Properties",
-    "Tenants",
-    "Payments"
-  ]
+  const tenantNav = ["Overview", "My Rental", "Open Rentals", "Requests"];
 
-  const tenantNav = [
-    "Overview",
-    "My Rental",
-    "Open Rentals",
-    "Payments"
-  ]
-
-  const navItems = role === "landlord" ? landlordNav : tenantNav
+  const navItems = role === "landlord" ? landlordNav : tenantNav;
 
   return (
     <aside className="w-64 border-r bg-white p-6 hidden md:block">
@@ -31,7 +20,7 @@ export function Sidebar({ active, onNavigate, role }: SidebarProps) {
       </h2>
 
       <nav className="space-y-3">
-        {navItems.map(item => (
+        {navItems.map((item) => (
           <Button
             key={item}
             className="w-full justify-start"
@@ -43,5 +32,5 @@ export function Sidebar({ active, onNavigate, role }: SidebarProps) {
         ))}
       </nav>
     </aside>
-  )
+  );
 }
