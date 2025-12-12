@@ -167,6 +167,14 @@ namespace Database.Controllers
     
             var tenantId = Guid.Parse(tenantIdString);
             
+            // Check to see if tenant is already renting a property. Tenants can only rent once
+            var isAlreadyRenting = await _context.Properties
+                .AnyAsync(p => p.TenantId == tenantId);
+
+            if (isAlreadyRenting)
+                return BadRequest("You are currently renting a property and cannot request a new one.");
+            
+            
             //find property. Must have no tenant for request to be made
             var property = await _context.Properties
                 .FirstOrDefaultAsync(p => p.Id == propertyId && p.TenantId == null);

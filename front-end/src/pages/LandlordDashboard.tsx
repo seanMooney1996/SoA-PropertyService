@@ -65,8 +65,11 @@ export default function LandlordDashboard() {
         description: "The tenants request was approved",
       });
       fetchData();
-    } catch (er) {
-      toast.error("Error!", { description: "Unsuccesful" });
+    } catch (er: any) {
+      const message = er.response?.data ?? "Failed to approve request.";
+      toast.error("Error!", {
+        description: message,
+      });
     }
   };
 
