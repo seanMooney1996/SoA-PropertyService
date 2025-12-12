@@ -91,7 +91,9 @@ export default function LandlordDashboard() {
   const totalProperties = properties.length;
   const activeTenants = properties.filter((p) => !p.isAvailable).length;
   const availableProperties = properties.filter((p) => p.isAvailable).length;
-  const pendingRequestSize = requests.length;
+  const pendingRequestSize = requests.filter(
+    (r) => r.status == "Pending"
+  ).length;
   const confirmedIncome = properties
     .filter((p) => !p.isAvailable)
     .reduce((sum, p) => sum + p.rentPrice, 0);

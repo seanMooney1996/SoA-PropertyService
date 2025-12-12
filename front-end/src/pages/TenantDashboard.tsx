@@ -51,6 +51,10 @@ export default function TenantDashboard() {
     }
   };
 
+  const pendingPropertyIds = myRequests
+    .filter((req) => req.status === "Pending")
+    .map((req) => req.propertyId);
+
   useEffect(() => {
     fetchData();
   }, []);
@@ -161,7 +165,11 @@ export default function TenantDashboard() {
             <h2 className="text-2xl font-semibold mb-4">
               Available Properties
             </h2>
-            <OpenRentalsTable rentals={openRentals} onRequest={requestRental} />
+            <OpenRentalsTable
+              rentals={openRentals}
+              onRequest={requestRental}
+              pendingPropertyIds={pendingPropertyIds}
+            />
           </div>
         )}
 

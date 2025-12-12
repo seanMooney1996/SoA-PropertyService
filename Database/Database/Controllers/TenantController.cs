@@ -152,7 +152,7 @@ namespace Database.Controllers
                     RentPrice = p.RentPrice
                 })
                 .ToListAsync();
-
+        
             return Ok(properties);
         }
         
@@ -193,7 +193,18 @@ namespace Database.Controllers
             _context.RentalRequests.Add(request);
             await _context.SaveChangesAsync();
     
-            return Ok(request);
+            return Ok(new RentalRequestDto
+            {
+                Id = request.Id,
+                PropertyId = request.PropertyId,
+                TenantId = request.TenantId,
+                Status = request.Status,
+                RequestedAt = request.RequestedAt,
+                City = property.City,    
+                County = property.County,
+                Address = property.AddressLine1, 
+                TenantName = User.FindFirst(System.Security.Claims.ClaimTypes.Name)?.Value,
+            });
         }
         
         [Authorize]
