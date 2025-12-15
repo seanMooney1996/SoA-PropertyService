@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Database.Models;
+using Database.Repositories;
 using Microsoft.AspNetCore.Authorization;
 
 namespace Database.Controllers
@@ -16,11 +17,11 @@ namespace Database.Controllers
     [ApiController]
     public class PropertyController : ControllerBase
     {
-        private readonly PropertyServiceContext _context;
+        private readonly IPropertyRepository _propertyRepo;
 
-        public PropertyController(PropertyServiceContext context)
+        public PropertyController(IPropertyRepository propertyRepo)
         {
-            _context = context;
+            _propertyRepo = propertyRepo;
         }
 
         // GET: api/Property
@@ -28,7 +29,8 @@ namespace Database.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Property>>> GetProperties()
         {
-            return await _context.Properties.ToListAsync();
+            var properties = await _propertyRepo.GetAllAsync();
+            return Ok(properties);
         }
 
         // GET: api/Property/5
@@ -36,57 +38,24 @@ namespace Database.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<Property>> GetProperty(Guid id)
         {
-            var @property = await _context.Properties.FindAsync(id);
+            var property = await _propertyRepo.GetByIdAsync(id);
 
-            if (@property == null)
+            if (property == null)
             {
                 return NotFound();
             }
 
-            return @property;
-        }
-
-        // PUT: api/Property/5
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        [Authorize]
-        [HttpPut("{id}")]
-        public async Task<IActionResult> PutProperty(Guid id, Property @property)
-        {
-            if (id != @property.Id)
-            {
-                return BadRequest();
-            }
-
-            _context.Entry(@property).State = EntityState.Modified;
-
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!PropertyExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
-
-            return NoContent();
+            return property;
         }
 
         // POST: api/Property
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [Authorize]
         [HttpPost]
         public async Task<ActionResult<Property>> PostProperty(CreatePropertyDto propertyDto)
         {
             var property = new Property()
             {
-                Id =  Guid.NewGuid(),
+                Id = Guid.NewGuid(),
                 LandlordId = Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value),
                 TenantId = null,
                 AddressLine1 = propertyDto.AddressLine1,
@@ -100,8 +69,8 @@ namespace Database.Controllers
                 UpdatedAt = DateTime.UtcNow
             };
 
-            _context.Properties.Add(property);
-            await _context.SaveChangesAsync();
+            await _propertyRepo.AddAsync(property);
+            await _propertyRepo.SaveChangesAsync();
 
             return CreatedAtAction("GetProperty", new { id = property.Id }, property);
         }
@@ -111,26 +80,20 @@ namespace Database.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteProperty(Guid id)
         {
-            var @property = await _context.Properties.FindAsync(id);
-            if (@property == null)
+            var property = await _propertyRepo.GetByIdAsync(id);
+            if (property == null)
             {
                 return NotFound();
             }
-
-            if (!@property.IsAvailable)
+            if (!property.IsAvailable)
             {
                 return Conflict("Property cannot be deleted while occupied");
             }
 
-            _context.Properties.Remove(@property);
-            await _context.SaveChangesAsync();
+            await _propertyRepo.DeleteAsync(property);
+            await _propertyRepo.SaveChangesAsync();
 
             return NoContent();
-        }
-
-        private bool PropertyExists(Guid id)
-        {
-            return _context.Properties.Any(e => e.Id == id);
         }
     }
 }

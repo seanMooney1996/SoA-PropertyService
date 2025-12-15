@@ -1,6 +1,7 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Text;
 using Database.Models;
+using Database.Repositories;
 using Database.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
@@ -64,6 +65,12 @@ builder.Services.AddScoped<JwtService>();
 builder.Services.AddDbContext<PropertyServiceContext>(options =>
     options.UseSqlite(connectionString));
 builder.Services.AddControllers();
+
+builder.Services.AddScoped<IAuthenticationRepository, AuthenticationRepository>();
+builder.Services.AddScoped<ILandlordRepository, LandlordRepository>();
+builder.Services.AddScoped<ITenantRepository, TenantRepository>();
+builder.Services.AddScoped<IPropertyRepository, PropertyRepository>();
+builder.Services.AddScoped<IRentalRequestRepository, RentalRequestRepository>();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();

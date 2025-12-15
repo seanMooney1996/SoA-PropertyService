@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Database.Models;
+using Database.Repositories;
 using Microsoft.AspNetCore.Authorization;
 
 namespace Database.Controllers
@@ -17,25 +18,33 @@ namespace Database.Controllers
     [ApiController]
     public class TenantController : ControllerBase
     {
-        private readonly PropertyServiceContext _context;
+        private readonly ITenantRepository _tenantRepo;
+        private readonly IPropertyRepository _propertyRepo;
+        private readonly IRentalRequestRepository _requestRepo;
 
-        public TenantController(PropertyServiceContext context)
+        public TenantController(
+            ITenantRepository tenantRepo,
+            IPropertyRepository propertyRepo,
+            IRentalRequestRepository requestRepo)
         {
-            _context = context;
+            _tenantRepo = tenantRepo;
+            _propertyRepo = propertyRepo;
+            _requestRepo = requestRepo;
         }
 
         // GET: api/Tenant
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Tenant>>> GetTenants()
         {
-            return await _context.Tenants.ToListAsync();
+            var tenants = await _tenantRepo.GetAllAsync();
+            return Ok(tenants);
         }
 
         // GET: api/Tenant/5
         [HttpGet("{id}")]
         public async Task<ActionResult<Tenant>> GetTenant(Guid id)
         {
-            var tenant = await _context.Tenants.FindAsync(id);
+            var tenant = await _tenantRepo.GetByIdAsync(id);
 
             if (tenant == null)
             {
@@ -45,44 +54,13 @@ namespace Database.Controllers
             return tenant;
         }
 
-        // PUT: api/Tenant/5
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        [HttpPut("{id}")]
-        public async Task<IActionResult> PutTenant(Guid id, Tenant tenant)
-        {
-            if (id != tenant.Id)
-            {
-                return BadRequest();
-            }
-
-            _context.Entry(tenant).State = EntityState.Modified;
-
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!TenantExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
-
-            return NoContent();
-        }
-
         // POST: api/Tenant
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
         public async Task<ActionResult<Tenant>> PostTenant(Tenant tenant)
         {
-            _context.Tenants.Add(tenant);
-            await _context.SaveChangesAsync();
+            await _tenantRepo.AddAsync(tenant);
+            await _tenantRepo.SaveChangesAsync();
 
             return CreatedAtAction("GetTenant", new { id = tenant.Id }, tenant);
         }
@@ -91,23 +69,18 @@ namespace Database.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteTenant(Guid id)
         {
-            var tenant = await _context.Tenants.FindAsync(id);
+            var tenant = await _tenantRepo.GetByIdAsync(id);
             if (tenant == null)
             {
                 return NotFound();
             }
 
-            _context.Tenants.Remove(tenant);
-            await _context.SaveChangesAsync();
+            await _tenantRepo.DeleteAsync(tenant);
+            await _tenantRepo.SaveChangesAsync();
 
             return NoContent();
         }
 
-        private bool TenantExists(Guid id)
-        {
-            return _context.Tenants.Any(e => e.Id == id);
-        }
-        
         // GET /Tenant/myRental
         [Authorize]
         [HttpGet("myRental")]
@@ -115,9 +88,7 @@ namespace Database.Controllers
         {
             var tenantId = Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
 
-            var property = await _context.Properties
-                .Where(p => p.TenantId == tenantId)
-                .FirstOrDefaultAsync();
+            var property = await _propertyRepo.GetPropertyByTenantIdAsync(tenantId);
 
             if (property == null)
                 return Ok(null); 
@@ -139,23 +110,21 @@ namespace Database.Controllers
         [HttpGet("openRentals")]
         public async Task<ActionResult<IEnumerable<PropertyDto>>> GetOpenRentals()
         {
-            var properties = await _context.Properties
-                .Where(p => p.TenantId == null)
-                .Select(p => new PropertyDto
-                {
-                    Id = p.Id,
-                    AddressLine1 = p.AddressLine1!,
-                    City = p.City!,
-                    County = p.County!,
-                    Bedrooms = p.Bedrooms,
-                    Bathrooms = p.Bathrooms,
-                    RentPrice = p.RentPrice
-                })
-                .ToListAsync();
+            var properties = await _propertyRepo.GetOpenPropertiesAsync();
+
+            var dtos = properties.Select(p => new PropertyDto
+            {
+                Id = p.Id,
+                AddressLine1 = p.AddressLine1!,
+                City = p.City!,
+                County = p.County!,
+                Bedrooms = p.Bedrooms,
+                Bathrooms = p.Bathrooms,
+                RentPrice = p.RentPrice
+            });
         
-            return Ok(properties);
+            return Ok(dtos);
         }
-        
         
         [Authorize]
         [HttpPost("request/{propertyId:guid}")]
@@ -168,23 +137,19 @@ namespace Database.Controllers
             var tenantId = Guid.Parse(tenantIdString);
             
             // Check to see if tenant is already renting a property. Tenants can only rent once
-            var isAlreadyRenting = await _context.Properties
-                .AnyAsync(p => p.TenantId == tenantId);
+            var isAlreadyRenting = await _propertyRepo.IsTenantRentingAnyPropertyAsync(tenantId);
 
             if (isAlreadyRenting)
                 return BadRequest("You are currently renting a property and cannot request a new one.");
             
-            
             //find property. Must have no tenant for request to be made
-            var property = await _context.Properties
-                .FirstOrDefaultAsync(p => p.Id == propertyId && p.TenantId == null);
+            var property = await _propertyRepo.GetByIdAsync(propertyId);
             
-            if (property == null)
+            if (property == null || property.TenantId != null)
                 return BadRequest("Property not available.");
             
             // If tenant already requested for property
-            var existingRequest = await _context.RentalRequests
-                .AnyAsync(r => r.TenantId == tenantId && r.PropertyId == propertyId && r.Status == "Pending");
+            var existingRequest = await _requestRepo.HasPendingRequestAsync(tenantId, propertyId);
 
             if (existingRequest)
                 return BadRequest("You already have a pending request for this property.");
@@ -198,8 +163,8 @@ namespace Database.Controllers
                 RequestedAt = DateTime.UtcNow
             };
             
-            _context.RentalRequests.Add(request);
-            await _context.SaveChangesAsync();
+            await _requestRepo.AddAsync(request);
+            await _requestRepo.SaveChangesAsync();
     
             return Ok(new RentalRequestDto
             {
@@ -225,24 +190,22 @@ namespace Database.Controllers
         
             var tenantId = Guid.Parse(tenantIdString);
             
-            var requests = await _context.RentalRequests
-                .Where(r => r.TenantId == tenantId)
-                .OrderByDescending(r => r.RequestedAt)
-                .Select(r => new RentalRequestDto
-                {
-                    Id = r.Id,
-                    PropertyId = r.PropertyId,
-                    Address = r.Property.AddressLine1!,
-                    City = r.Property.City!,
-                    County = r.Property.County!,
-                    TenantId = r.TenantId,
-                    TenantName = (r.Tenant.FirstName + " " + r.Tenant.LastName).Trim(),
-                    Status = r.Status,
-                    RequestedAt = r.RequestedAt
-                })
-                .ToListAsync();
+            var requests = await _requestRepo.GetByTenantIdWithDetailsAsync(tenantId);
+
+            var dtos = requests.Select(r => new RentalRequestDto
+            {
+                Id = r.Id,
+                PropertyId = r.PropertyId,
+                Address = r.Property.AddressLine1!,
+                City = r.Property.City!,
+                County = r.Property.County!,
+                TenantId = r.TenantId,
+                TenantName = (r.Tenant.FirstName + " " + r.Tenant.LastName).Trim(),
+                Status = r.Status,
+                RequestedAt = r.RequestedAt
+            });
             
-            return Ok(requests);
+            return Ok(dtos);
         }
         
         [Authorize]
@@ -255,14 +218,13 @@ namespace Database.Controllers
         
             var tenantId = Guid.Parse(tenantIdStr);
             
-            var request = await _context.RentalRequests
-                .FirstOrDefaultAsync(r => r.TenantId == tenantId && r.PropertyId == propertyId);
+            var request = await _requestRepo.GetByTenantAndPropertyIdAsync(tenantId, propertyId);
 
             if (request == null)
                 return NotFound("No request found for this property.");
 
-            _context.RentalRequests.Remove(request);
-            await _context.SaveChangesAsync();
+            await _requestRepo.DeleteAsync(request);
+            await _requestRepo.SaveChangesAsync();
             
             return Ok(new { message = "Request cancelled successfully." });
         }
