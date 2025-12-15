@@ -3,6 +3,7 @@ using System;
 using Database.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Database.Migrations
 {
     [DbContext(typeof(PropertyServiceContext))]
-    partial class PropertyServiceContextModelSnapshot : ModelSnapshot
+    [Migration("20251215130400_Add fkeys for relationships in erd")]
+    partial class Addfkeysforrelationshipsinerd
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "8.0.22");
@@ -46,9 +49,6 @@ namespace Database.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("TEXT");
 
-                    b.Property<Guid>("AuthenticationId")
-                        .HasColumnType("TEXT");
-
                     b.Property<string>("CompanyName")
                         .HasColumnType("TEXT");
 
@@ -71,8 +71,6 @@ namespace Database.Migrations
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("AuthenticationId");
 
                     b.ToTable("Landlords");
                 });
@@ -159,9 +157,6 @@ namespace Database.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("TEXT");
 
-                    b.Property<Guid>("AuthenticationId")
-                        .HasColumnType("TEXT");
-
                     b.Property<string>("FirstName")
                         .HasColumnType("TEXT");
 
@@ -170,20 +165,7 @@ namespace Database.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("AuthenticationId");
-
                     b.ToTable("Tenants");
-                });
-
-            modelBuilder.Entity("Database.Models.Landlord", b =>
-                {
-                    b.HasOne("Database.Models.Authentication", "Authentication")
-                        .WithMany()
-                        .HasForeignKey("AuthenticationId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Authentication");
                 });
 
             modelBuilder.Entity("Database.Models.Property", b =>
@@ -220,17 +202,6 @@ namespace Database.Migrations
                     b.Navigation("Property");
 
                     b.Navigation("Tenant");
-                });
-
-            modelBuilder.Entity("Database.Models.Tenant", b =>
-                {
-                    b.HasOne("Database.Models.Authentication", "Authentication")
-                        .WithMany()
-                        .HasForeignKey("AuthenticationId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Authentication");
                 });
 
             modelBuilder.Entity("Database.Models.Landlord", b =>

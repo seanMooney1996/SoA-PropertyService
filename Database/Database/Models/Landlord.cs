@@ -1,4 +1,6 @@
-﻿namespace Database.Models;
+﻿using System.ComponentModel.DataAnnotations.Schema;
+
+namespace Database.Models;
 
 public class Landlord
 {
@@ -10,4 +12,11 @@ public class Landlord
     public string? CompanyName { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
+    
+    public ICollection<Property> Properties { get; set; }
+    
+    public Guid AuthenticationId { get; set; } 
+    
+    [ForeignKey("AuthenticationId")]
+    public Authentication Authentication { get; set; }
 }

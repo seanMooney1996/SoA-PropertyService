@@ -49,6 +49,7 @@ namespace Database.Controllers
                 var landlord = new Landlord
                 {
                     Id = auth.Id,
+                    AuthenticationId = auth.Id,
                     FirstName = dto.FirstName,
                     LastName = dto.LastName,
                     Email = dto.Email,
@@ -65,6 +66,7 @@ namespace Database.Controllers
                 var tenant = new Tenant
                 {
                     Id = auth.Id,
+                    AuthenticationId = auth.Id,
                     FirstName = dto.FirstName,
                     LastName = dto.LastName
                 };
@@ -122,13 +124,13 @@ namespace Database.Controllers
             if (user.Role.Equals("landlord", StringComparison.OrdinalIgnoreCase))
             {
                 var landlord = await _context.Landlords
-                    .FirstOrDefaultAsync(x => x.Id == user.Id);
+                    .FirstOrDefaultAsync(x => x.AuthenticationId == user.Id);
                 fName = landlord?.FirstName ?? "";
             }
             else
             {
                 var tenant = await _context.Tenants
-                    .FirstOrDefaultAsync(x => x.Id == user.Id);
+                    .FirstOrDefaultAsync(x => x.AuthenticationId == user.Id);
                 fName = tenant?.FirstName ?? "";
             }
 
