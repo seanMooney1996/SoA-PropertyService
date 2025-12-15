@@ -166,7 +166,6 @@ namespace Database.Controllers
                     RequestedAt = r.RequestedAt
                 })
                 .ToListAsync();
-            Console.WriteLine(requests[0].Address);
             return Ok(requests);
         }
         
@@ -188,6 +187,16 @@ namespace Database.Controllers
             if (request.Status != "Pending")
                 return BadRequest("Request not pending");
             
+            // check for tenant already renting 
+            var isTenantAlreadyRenting = await _context.Properties
+                .AnyAsync(p => p.TenantId == request.TenantId);
+            if (isTenantAlreadyRenting)
+            {
+                request.Status = "Declined"; 
+                await _context.SaveChangesAsync();
+                return BadRequest("This tenant is already actively renting another property.");
+            }
+            
             request.Status = "Approved";
             property.TenantId = request.TenantId;
             property.IsAvailable = false;
@@ -195,9 +204,9 @@ namespace Database.Controllers
             var otherRequests = _context.RentalRequests
                 .Where(r => r.PropertyId == request.PropertyId && r.Id != id);
 
-            // set other requests to declined
+            // set other requests to tenant unavailable
             foreach (var r in otherRequests)
-                r.Status = "Declined";
+                r.Status = "TenantUnavailable";
         
             await _context.SaveChangesAsync();
 

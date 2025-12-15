@@ -119,7 +119,7 @@ namespace Database.Controllers
 
             if (!@property.IsAvailable)
             {
-                return Conflict("Property cannot be deleted while occupied or unavailable.");
+                return Conflict("Property cannot be deleted while occupied");
             }
 
             _context.Properties.Remove(@property);

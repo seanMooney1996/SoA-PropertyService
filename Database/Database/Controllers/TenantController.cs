@@ -152,7 +152,7 @@ namespace Database.Controllers
                     RentPrice = p.RentPrice
                 })
                 .ToListAsync();
-
+        
             return Ok(properties);
         }
         
@@ -166,6 +166,14 @@ namespace Database.Controllers
                 return Unauthorized("No tenant id in token");
     
             var tenantId = Guid.Parse(tenantIdString);
+            
+            // Check to see if tenant is already renting a property. Tenants can only rent once
+            var isAlreadyRenting = await _context.Properties
+                .AnyAsync(p => p.TenantId == tenantId);
+
+            if (isAlreadyRenting)
+                return BadRequest("You are currently renting a property and cannot request a new one.");
+            
             
             //find property. Must have no tenant for request to be made
             var property = await _context.Properties
@@ -193,7 +201,18 @@ namespace Database.Controllers
             _context.RentalRequests.Add(request);
             await _context.SaveChangesAsync();
     
-            return Ok(request);
+            return Ok(new RentalRequestDto
+            {
+                Id = request.Id,
+                PropertyId = request.PropertyId,
+                TenantId = request.TenantId,
+                Status = request.Status,
+                RequestedAt = request.RequestedAt,
+                City = property.City,    
+                County = property.County,
+                Address = property.AddressLine1, 
+                TenantName = User.FindFirst(System.Security.Claims.ClaimTypes.Name)?.Value,
+            });
         }
         
         [Authorize]
