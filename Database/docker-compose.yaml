@@ -1,0 +1,9 @@
+﻿services:
+  api:
+    build: .
+    ports:
+      - "5000:8080"
+    volumes:
+      - ./db_data:/app/data
+    environment:
+      - ConnectionStrings__DefaultConnection=Data Source=/app/data/app.db
