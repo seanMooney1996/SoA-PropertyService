@@ -5,6 +5,7 @@ using Database.DTOs.Auth;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Database.Models;
+using Database.Repositories;
 using Database.Services;
 using Microsoft.IdentityModel.Tokens;
 
@@ -14,12 +15,20 @@ namespace Database.Controllers
     [ApiController]
     public class AuthController : ControllerBase
     {
-        private readonly PropertyServiceContext _context;
-        private readonly JwtService _jwtService;
+        private readonly IAuthenticationRepository _authRepo;
+        private readonly ILandlordRepository _landlordRepo;
+        private readonly ITenantRepository _tenantRepo;
+        private readonly IJwtService _jwtService;
 
-        public AuthController(PropertyServiceContext context, JwtService jwtService)
+        public AuthController(
+            IAuthenticationRepository authRepo,
+            ILandlordRepository landlordRepo,
+            ITenantRepository tenantRepo,
+            IJwtService jwtService)
         {
-            _context = context;
+            _authRepo = authRepo;
+            _landlordRepo = landlordRepo;
+            _tenantRepo = tenantRepo;
             _jwtService = jwtService;
         }
 
@@ -27,8 +36,7 @@ namespace Database.Controllers
         [HttpPost("signup")]
         public async Task<ActionResult<AuthResponseDto>> Signup(SignUpDto dto)
         {
-            var existing = await _context.Authentications
-                .FirstOrDefaultAsync(x => x.Email == dto.Email);
+            var existing = await _authRepo.GetByEmailAsync(dto.Email);
 
             if (existing != null)
                 return Conflict("Email already in use.");
@@ -42,14 +50,14 @@ namespace Database.Controllers
                 CreatedAt = DateTime.UtcNow
             };
 
-            _context.Authentications.Add(auth);
+            await _authRepo.AddAsync(auth);
 
             if (dto.Role.ToLower() == "landlord")
             {
                 var landlord = new Landlord
                 {
                     Id = auth.Id,
-                    AuthenticationId = auth.Id,
+                    Authentication = auth,
                     FirstName = dto.FirstName,
                     LastName = dto.LastName,
                     Email = dto.Email,
@@ -59,26 +67,26 @@ namespace Database.Controllers
                     UpdatedAt = DateTime.UtcNow
                 };
 
-                _context.Landlords.Add(landlord);
+                await _landlordRepo.AddAsync(landlord);
             }
             else if (dto.Role.ToLower() == "tenant")
             {
                 var tenant = new Tenant
                 {
                     Id = auth.Id,
-                    AuthenticationId = auth.Id,
+                    Authentication = auth,
                     FirstName = dto.FirstName,
                     LastName = dto.LastName
                 };
 
-                _context.Tenants.Add(tenant);
+                await _tenantRepo.AddAsync(tenant);
             }
             else
             {
                 return BadRequest("Invalid role. Must be 'tenant' or 'landlord'.");
             }
 
-            await _context.SaveChangesAsync();
+            await _authRepo.SaveChangesAsync();
 
             var token = _jwtService.GenerateToken(auth.Id, auth.Email, auth.Role);
 
@@ -110,8 +118,7 @@ namespace Database.Controllers
         [HttpPost("login")]
         public async Task<ActionResult<AuthResponseDto>> Login(LoginDto dto)
         {
-            var user = await _context.Authentications
-                .FirstOrDefaultAsync(x => x.Email == dto.Email);
+            var user = await _authRepo.GetByEmailAsync(dto.Email);
 
             if (user == null)
                 return Unauthorized("Invalid email or password.");
@@ -123,14 +130,12 @@ namespace Database.Controllers
 
             if (user.Role.Equals("landlord", StringComparison.OrdinalIgnoreCase))
             {
-                var landlord = await _context.Landlords
-                    .FirstOrDefaultAsync(x => x.AuthenticationId == user.Id);
+                var landlord = await _landlordRepo.GetByIdAsync(user.Id);
                 fName = landlord?.FirstName ?? "";
             }
             else
             {
-                var tenant = await _context.Tenants
-                    .FirstOrDefaultAsync(x => x.AuthenticationId == user.Id);
+                var tenant = await _tenantRepo.GetByIdAsync(user.Id);
                 fName = tenant?.FirstName ?? "";
             }
 
