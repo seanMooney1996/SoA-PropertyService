@@ -59,7 +59,7 @@ builder.Services.AddAuthorization();
 
 var connectionString = builder.Configuration.GetConnectionString("PropertyService") ?? "Data Source=PropertyService.db";
 // Add services to the container.
-builder.Services.AddScoped<JwtService>();
+
 
 
 builder.Services.AddDbContext<PropertyServiceContext>(options =>
@@ -71,6 +71,7 @@ builder.Services.AddScoped<ILandlordRepository, LandlordRepository>();
 builder.Services.AddScoped<ITenantRepository, TenantRepository>();
 builder.Services.AddScoped<IPropertyRepository, PropertyRepository>();
 builder.Services.AddScoped<IRentalRequestRepository, RentalRequestRepository>();
+builder.Services.AddScoped<IJwtService,JwtService>();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();

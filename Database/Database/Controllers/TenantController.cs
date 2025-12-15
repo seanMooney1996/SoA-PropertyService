@@ -65,22 +65,6 @@ namespace Database.Controllers
             return CreatedAtAction("GetTenant", new { id = tenant.Id }, tenant);
         }
 
-        // DELETE: api/Tenant/5
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteTenant(Guid id)
-        {
-            var tenant = await _tenantRepo.GetByIdAsync(id);
-            if (tenant == null)
-            {
-                return NotFound();
-            }
-
-            await _tenantRepo.DeleteAsync(tenant);
-            await _tenantRepo.SaveChangesAsync();
-
-            return NoContent();
-        }
-
         // GET /Tenant/myRental
         [Authorize]
         [HttpGet("myRental")]

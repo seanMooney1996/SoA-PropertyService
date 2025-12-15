@@ -18,13 +18,13 @@ namespace Database.Controllers
         private readonly IAuthenticationRepository _authRepo;
         private readonly ILandlordRepository _landlordRepo;
         private readonly ITenantRepository _tenantRepo;
-        private readonly JwtService _jwtService;
+        private readonly IJwtService _jwtService;
 
         public AuthController(
             IAuthenticationRepository authRepo,
             ILandlordRepository landlordRepo,
             ITenantRepository tenantRepo,
-            JwtService jwtService)
+            IJwtService jwtService)
         {
             _authRepo = authRepo;
             _landlordRepo = landlordRepo;

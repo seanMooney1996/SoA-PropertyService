@@ -7,7 +7,7 @@
 
     namespace Database.Services;
 
-    public class JwtService
+    public class JwtService:IJwtService
     {
         private readonly IConfiguration _config;
         public JwtService(IConfiguration config)
