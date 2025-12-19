@@ -160,7 +160,7 @@ namespace Database.Controllers
                 City = property.City,    
                 County = property.County,
                 Address = property.AddressLine1, 
-                TenantName = User.FindFirst(System.Security.Claims.ClaimTypes.Name)?.Value,
+                TenantName = User.FindFirst(ClaimTypes.Name)?.Value,
             });
         }
         
